@@ -1,0 +1,43 @@
+name: Mobile EAS Build and Submit
+
+on:
+  workflow_dispatch:
+    inputs:
+      submit:
+        description: "Submit to stores after build"
+        required: true
+        default: "false"
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/mobile-eas.yml"
+
+jobs:
+  eas-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: npm install
+      - name: Setup EAS
+        run: npm install -g eas-cli
+      - name: EAS Build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_PUBLIC_ENV: production
+          EXPO_PUBLIC_API_BASE_URL: ${{ secrets.PROD_API_BASE_URL }}
+        run: eas build --platform all --profile production --non-interactive
+      - name: EAS Submit
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.submit == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas submit --platform ios --profile production --non-interactive
+          eas submit --platform android --profile production --non-interactive
