@@ -898,3 +898,15 @@ class MatchV2(Base):
     dynamics_payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     explanation: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     computed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class BetaSignup(Base):
+    __tablename__ = "beta_signups"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    source: Mapped[str] = mapped_column(String(64), nullable=False, default="landing_page")
+    city: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    referral_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    notified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

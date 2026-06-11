@@ -5,6 +5,7 @@ services:
     runtime: python
     rootDir: services/api
     buildCommand: pip install -r requirements.txt
+    preDeployCommand: alembic upgrade head
     startCommand: bash scripts/start.sh
     plan: starter          # upgrade to standard when you need more RAM
     region: oregon         # change to match your users (e.g. frankfurt)
@@ -23,7 +24,7 @@ services:
       - key: ADMIN_EMAILS
         sync: false          # set manually in Render dashboard
       - key: CORS_ALLOW_ORIGINS
-        value: https://soulmatch.app,https://www.soulmatch.app,https://app.soulmatch.app
+        value: https://soulmatch.app,https://www.soulmatch.app,https://app.soulmatch.app,https://eliyasekulova-lang.github.io
       - key: APP_SUPPORT_EMAIL
         value: support@soulmatch.app
       - key: APP_POLICY_BASE_URL
@@ -55,7 +56,7 @@ services:
   - type: web
     name: soulmatch-landing
     runtime: static
-    rootDir: apps/mobile/web
+    rootDir: web
     buildCommand: ""        # plain HTML — no build step needed
     staticPublishPath: .
     headers:

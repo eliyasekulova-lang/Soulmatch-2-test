@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .database import SessionLocal, init_db
 from .domains.auth import router as auth_router
+from .domains.beta import router as beta_router
 from .domains.astrology import router as astrology_router
 from .domains.billing import router as billing_router
 from .domains.compliance import router as compliance_router
@@ -79,6 +80,7 @@ install_audit_event_middleware(app)
 
 routers = [
     auth_router,
+    beta_router,
     profile_router,
     onboarding_router,
     psychology_router,
