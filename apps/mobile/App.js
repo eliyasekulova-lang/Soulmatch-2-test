@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Animated,
   Dimensions,
@@ -24,97 +24,81 @@ import {
 import tzLookup from "tz-lookup";
 import { API_BASE_URL } from "./src/config";
 
-const { width: W, height: H } = Dimensions.get("window");
+const { width: W } = Dimensions.get("window");
 
-// ── COLORS ────────────────────────────────────────────────────────────────────
+// ── COLORS ─────────────────────────────────────────────────────────────────────
 const C = {
-  bg:     "#0B0E14",
-  bg2:    "#10141E",
-  bg3:    "#161B27",
-  bg4:    "#1C2233",
-  purple: "#7B2FBE",
-  violet: "#9D4EDD",
-  pink:   "#E040FB",
-  teal:   "#00C9C8",
-  gold:   "#FFD700",
-  green:  "#40FB82",
-  text:   "#F0F0F8",
-  muted:  "#8A8FA8",
-  error:  "#FF6B7A",
+  bg: "#0B0E14", bg2: "#10141E", bg3: "#161B27", bg4: "#1C2233",
+  purple: "#7B2FBE", violet: "#9D4EDD", pink: "#E040FB",
+  teal: "#00C9C8", gold: "#FFD700", green: "#40FB82",
+  text: "#F0F0F8", muted: "#8A8FA8", error: "#FF6B7A",
   border: "rgba(255,255,255,0.08)",
 };
 
-// ── PSYCHOLOGY ASSESSMENT ─────────────────────────────────────────────────────
+// ── PSYCHOLOGY: 12 MAIN QUESTIONS ─────────────────────────────────────────────
 const QUESTIONS = [
   {
-    dimension: "Attachment Style",
-    emoji: "🔗",
+    dimension: "Attachment Style", emoji: "🔗",
     question: "When you haven't heard from someone you care about in a while, what's your first reaction?",
     options: [
       "I worry — did I say something wrong?",
       "I give them space and trust they'll reach out",
-      "I feel fine, I appreciate my independence",
+      "I feel fine, I value my independence",
       "I get briefly irritated, then let it go",
     ],
   },
   {
-    dimension: "Emotional Regulation",
-    emoji: "🌊",
+    dimension: "Emotional Regulation", emoji: "🌊",
     question: "When you're really upset, you usually...",
     options: [
       "Need to talk it out with someone immediately",
       "Process quietly on my own, then talk",
       "Distract myself until it passes",
-      "Channel it — exercise, writing, creating",
+      "Channel it into exercise, writing, or creating",
     ],
   },
   {
-    dimension: "Core Values",
-    emoji: "⚡",
-    question: "What matters most in a partner?",
+    dimension: "Core Values", emoji: "⚡",
+    question: "What matters most in a close relationship?",
     options: [
-      "Ambition and a real growth mindset",
-      "Emotional warmth and being present",
-      "Independence and stability",
-      "Playfulness and adventure",
+      "Shared ambition and growth mindset",
+      "Emotional warmth and being genuinely present",
+      "Mutual independence and stability",
+      "Playfulness, spontaneity, and adventure",
     ],
   },
   {
-    dimension: "Communication Style",
-    emoji: "💬",
-    question: "When something bothers you, you tend to...",
+    dimension: "Communication Style", emoji: "💬",
+    question: "When something bothers you in a relationship, you tend to...",
     options: [
-      "Say it in the moment, even if it's uncomfortable",
-      "Reflect first, then bring it up calmly",
-      "Let small things go, only address big ones",
+      "Say it in the moment, even if uncomfortable",
+      "Reflect first, then bring it up calmly later",
+      "Let smaller things go, only address big ones",
       "Find it really hard to bring up at all",
     ],
   },
   {
-    dimension: "Conflict Approach",
-    emoji: "🛡",
+    dimension: "Conflict Approach", emoji: "🛡",
     question: "During conflict, your instinct is to...",
     options: [
-      "Resolve it immediately, even if tense",
-      "Need a breather, then come back to talk",
+      "Resolve it immediately, even if it gets tense",
+      "Take a breather, then come back to talk",
       "Find common ground as quickly as possible",
       "Withdraw until things settle on their own",
     ],
   },
   {
-    dimension: "Independence Needs",
-    emoji: "🌙",
-    question: "Your ideal weekend with a partner looks like...",
+    dimension: "Independence Needs", emoji: "🌙",
+    question: "Your ideal weekend with someone close looks like...",
     options: [
-      "Together all weekend — wherever, whatever",
-      "Morning together, afternoon apart",
-      "Separate days, come together in the evening",
-      "Completely flexible — it depends on the week",
+      "Together the whole time — wherever, whatever",
+      "Mornings together, afternoons apart",
+      "Mostly separate days, reunite in the evening",
+      "Completely flexible depending on the week",
     ],
   },
   {
-    dimension: "Vulnerability Comfort",
-    emoji: "🫀",
+    dimension: "Vulnerability Comfort", emoji: "🫀",
     question: "Sharing something emotionally vulnerable with someone new feels...",
     options: [
       "Natural — I connect through openness",
@@ -124,146 +108,321 @@ const QUESTIONS = [
     ],
   },
   {
-    dimension: "Reassurance Needs",
-    emoji: "🤝",
+    dimension: "Reassurance Needs", emoji: "🤝",
     question: "After a disagreement, what do you need most?",
     options: [
       "Explicit confirmation that we're still okay",
-      "Normal interaction — it signals we're fine",
-      "Time alone to fully reset",
+      "Normal interaction — that signals things are fine",
+      "Time alone to fully reset first",
       "Physical closeness to feel reconnected",
     ],
   },
   {
-    dimension: "Love Language",
-    emoji: "💝",
+    dimension: "Love Language", emoji: "💝",
     question: "You feel most loved when...",
     options: [
       "Someone tells me directly and sincerely",
       "Someone gives me their full, undivided attention",
-      "Someone does something thoughtful for me",
+      "Someone does something thoughtful without being asked",
       "Physical presence, touch, or proximity",
     ],
   },
   {
-    dimension: "Growth Mindset",
-    emoji: "🌱",
+    dimension: "Growth Mindset", emoji: "🌱",
     question: "When you're wrong about something, you...",
     options: [
       "Find it uncomfortable but own it quickly",
-      "Need some time, but always get there",
+      "Need a little time, but always get there",
       "Defend my view until fully convinced otherwise",
-      "Over-apologise — I take it really hard",
+      "Over-apologise — I take it really hard on myself",
     ],
   },
   {
-    dimension: "Openness",
-    emoji: "🧭",
+    dimension: "Openness", emoji: "🧭",
     question: "Your attitude toward new experiences is...",
     options: [
       "Always excited — novelty energises me",
-      "Open, but with some structure around it",
-      "Prefer familiar, open to occasional change",
-      "Routines ground me — change is stressful",
+      "Open, but I like some structure around it",
+      "I prefer the familiar, open to occasional change",
+      "My routines ground me — change is stressful",
     ],
   },
   {
-    dimension: "Relationship Goals",
-    emoji: "🎯",
+    dimension: "Relationship Goals", emoji: "🎯",
     question: "In 5 years, your ideal relationship looks like...",
     options: [
       "Deep partnership — building something together",
-      "Strong individuals who choose each other daily",
-      "Secure home base while pursuing separate ambitions",
+      "Strong individuals who actively choose each other daily",
+      "A secure home base while pursuing separate ambitions",
       "Still figuring it out — the journey is the goal",
     ],
   },
 ];
 
-const DEMO_MATCHES = [
-  { id: "1", name: "Zara M.", city: "Toronto, ON", score: 91, avatar: "Z", highlights: ["Secure attachment", "Shared growth mindset", "Both value independence"] },
-  { id: "2", name: "Jordan K.", city: "Toronto, ON", score: 84, avatar: "J", highlights: ["Similar conflict approach", "Complementary love languages", "Aligned relationship goals"] },
-  { id: "3", name: "Sofia T.", city: "Toronto, ON", score: 78, avatar: "S", highlights: ["High emotional regulation match", "Shared core values", "Compatible communication styles"] },
-  { id: "4", name: "Alex R.", city: "Toronto, ON", score: 73, avatar: "A", highlights: ["Strong vulnerability alignment", "Matching openness score", "Similar reassurance needs"] },
+// ── ADAPTIVE FOLLOW-UP QUESTIONS (one per attachment answer) ──────────────────
+const ADAPTIVE_QUESTIONS = [
+  // [0] Anxious
+  {
+    dimension: "Attachment Style (Depth)", emoji: "😟",
+    question: "When a partner becomes less responsive or pulls back emotionally, you usually...",
+    options: [
+      "Wait and try hard not to read into it",
+      "Send a gentle check-in to see if things are okay",
+      "Increase contact — more texts, calls, showing up",
+      "Feel panicked and unsure what to do with myself",
+    ],
+  },
+  // [1] Secure
+  {
+    dimension: "Attachment Style (Depth)", emoji: "🌿",
+    question: "When someone important to you is struggling emotionally, your instinct is to...",
+    options: [
+      "Listen without trying to fix anything — just be present",
+      "Help them think through it practically",
+      "Give them space to process, then check in",
+      "Gently encourage them to open up",
+    ],
+  },
+  // [2] Avoidant
+  {
+    dimension: "Attachment Style (Depth)", emoji: "🏃",
+    question: "When a relationship starts feeling emotionally intense or 'too much', you...",
+    options: [
+      "Get very busy — work, hobbies, anything to create distance",
+      "Have an honest conversation about needing more space",
+      "Slowly pull back without fully explaining why",
+      "Stay physically present but emotionally disconnect",
+    ],
+  },
+  // [3] Disorganized
+  {
+    dimension: "Attachment Style (Depth)", emoji: "🌀",
+    question: "In a close relationship, when you feel both drawn to AND scared of closeness, you...",
+    options: [
+      "Swing between wanting closeness and pushing the person away",
+      "Try to sit with the discomfort and stay present",
+      "Distract yourself until the feeling passes",
+      "Create distance to feel safe, even if you don't want to",
+    ],
+  },
 ];
 
-const DIMENSIONS_DEMO = [
-  { label: "Attachment Style",     score: 88, color: "#7B2FBE" },
-  { label: "Emotional Regulation", score: 74, color: "#9D4EDD" },
-  { label: "Core Values",          score: 92, color: "#E040FB" },
-  { label: "Communication",        score: 65, color: "#00C9C8" },
-  { label: "Conflict Approach",    score: 81, color: "#40FB82" },
-  { label: "Independence Needs",   score: 70, color: "#7B2FBE" },
-  { label: "Vulnerability",        score: 58, color: "#9D4EDD" },
-  { label: "Reassurance Needs",    score: 44, color: "#E040FB" },
-  { label: "Love Language",        score: 95, color: "#00C9C8" },
-  { label: "Growth Mindset",       score: 87, color: "#40FB82" },
-  { label: "Openness",             score: 76, color: "#7B2FBE" },
-  { label: "Relationship Goals",   score: 90, color: "#9D4EDD" },
+// ── SCORING MATRIX [question][option] → dimension score (0–100) ───────────────
+const DIMENSION_SCORES = [
+  [30, 90, 48, 22],  // Q0 Attachment: anxious/secure/avoidant/disorganized
+  [62, 90, 40, 75],  // Q1 Emotional regulation
+  [72, 82, 62, 68],  // Q2 Core values (all reasonable, type-tagged separately)
+  [80, 90, 70, 28],  // Q3 Communication: direct/reflective/selective/avoidant
+  [72, 88, 82, 24],  // Q4 Conflict
+  [52, 88, 72, 82],  // Q5 Independence
+  [90, 82, 62, 24],  // Q6 Vulnerability
+  [42, 88, 72, 76],  // Q7 Reassurance
+  [80, 88, 76, 72],  // Q8 Love language
+  [80, 72, 40, 56],  // Q9 Growth mindset
+  [90, 82, 52, 34],  // Q10 Openness
+  [88, 88, 82, 52],  // Q11 Relationship goals
 ];
 
-// ── PLACE FALLBACK ────────────────────────────────────────────────────────────
-const PLACE_FALLBACK = [
-  { id: "toronto", label: "Toronto, Ontario, Canada", latitude: 43.6532, longitude: -79.3832 },
-  { id: "vancouver", label: "Vancouver, BC, Canada", latitude: 49.2827, longitude: -123.1207 },
-  { id: "new-york", label: "New York City, NY, USA", latitude: 40.7128, longitude: -74.006 },
-  { id: "london", label: "London, England, UK", latitude: 51.5074, longitude: -0.1278 },
-  { id: "los-angeles", label: "Los Angeles, CA, USA", latitude: 34.0522, longitude: -118.2437 },
-  { id: "paris", label: "Paris, France", latitude: 48.8566, longitude: 2.3522 },
-  { id: "sydney", label: "Sydney, NSW, Australia", latitude: -33.8688, longitude: 151.2093 },
-  { id: "berlin", label: "Berlin, Germany", latitude: 52.52, longitude: 13.405 },
-  { id: "singapore", label: "Singapore", latitude: 1.3521, longitude: 103.8198 },
-  { id: "tokyo", label: "Tokyo, Japan", latitude: 35.6762, longitude: 139.6503 },
+// Attachment adaptive refiners [attachment_answer][adaptive_answer] → score delta
+const ADAPTIVE_DELTA = [
+  [+14, +6, -6, -18],   // Anxious follow-ups
+  [+5, 0, -4, -4],      // Secure follow-ups
+  [-8, +14, -4, -10],   // Avoidant follow-ups
+  [0, +20, +4, -4],     // Disorganized follow-ups
 ];
 
-function safeTimezone(lat, lon) {
-  try { return tzLookup(lat, lon); } catch (_) { return ""; }
+const ATTACHMENT_TYPES  = { 0: "anxious", 1: "secure", 2: "avoidant", 3: "disorganized" };
+const VALUE_TYPES       = { 0: "growth", 1: "warmth", 2: "independence", 3: "adventure" };
+const GOAL_TYPES        = { 0: "partnership", 1: "independence", 2: "secure_base", 3: "exploring" };
+const COMM_TYPES        = { 0: "direct", 1: "reflective", 2: "selective", 3: "avoidant" };
+
+const ATTACHMENT_LABELS = {
+  secure: "🌿 Secure", anxious: "😟 Anxious-preoccupied",
+  avoidant: "🏃 Dismissive-avoidant", disorganized: "🌀 Fearful-avoidant",
+};
+const ATTACHMENT_INSIGHTS = {
+  secure: "You bring emotional stability and genuine availability to relationships. You're comfortable with both closeness and independence — one of the most compatible profiles for long-term partnership.",
+  anxious: "You form deep bonds and care intensely. You do best with a secure partner who can provide consistency. Awareness of your patterns is already the biggest step toward more ease in relationships.",
+  avoidant: "You value independence and need breathing room to feel safe. Self-aware avoidants who understand their patterns often build deeply fulfilling, lasting connections — especially with secure partners.",
+  disorganized: "You experience relationships as both deeply desired and sometimes overwhelming. With the right partner and growing self-awareness, you can build the secure connection you're looking for.",
+};
+
+// ── COMPATIBILITY MATRICES ────────────────────────────────────────────────────
+const ATTACH_ROMANCE = {
+  secure:       { secure: 95, anxious: 78, avoidant: 72, disorganized: 58 },
+  anxious:      { secure: 78, anxious: 44, avoidant: 18, disorganized: 30 },
+  avoidant:     { secure: 72, anxious: 18, avoidant: 54, disorganized: 36 },
+  disorganized: { secure: 58, anxious: 30, avoidant: 36, disorganized: 42 },
+};
+const ATTACH_FRIENDSHIP = {
+  secure:       { secure: 92, anxious: 82, avoidant: 78, disorganized: 68 },
+  anxious:      { secure: 82, anxious: 68, avoidant: 62, disorganized: 58 },
+  avoidant:     { secure: 78, anxious: 62, avoidant: 72, disorganized: 64 },
+  disorganized: { secure: 68, anxious: 58, avoidant: 64, disorganized: 60 },
+};
+
+// Weights per dimension for romance vs friendship (must sum to 1.0)
+const W_ROMANCE    = [0.18, 0.10, 0.12, 0.08, 0.10, 0.07, 0.08, 0.07, 0.08, 0.04, 0.04, 0.04];
+const W_FRIENDSHIP = [0.05, 0.08, 0.20, 0.14, 0.10, 0.08, 0.06, 0.03, 0.03, 0.11, 0.08, 0.04];
+
+const DIM_COLORS = [
+  "#7B2FBE","#9D4EDD","#E040FB","#00C9C8","#40FB82",
+  "#7B2FBE","#9D4EDD","#E040FB","#00C9C8","#40FB82","#7B2FBE","#9D4EDD",
+];
+const DIM_LABELS = [
+  "Attachment Style","Emotional Regulation","Core Values","Communication",
+  "Conflict Approach","Independence Needs","Vulnerability","Reassurance Needs",
+  "Love Language","Growth Mindset","Openness","Relationship Goals",
+];
+
+// ── PROFILE COMPUTATION ───────────────────────────────────────────────────────
+function computeProfile(answers, adaptiveAnswer) {
+  const dims = DIM_LABELS.map((label, i) => {
+    const ans = answers[i] ?? null;
+    const score = ans !== null ? DIMENSION_SCORES[i][ans] : 60;
+    return { label, score, color: DIM_COLORS[i] };
+  });
+
+  const a0 = answers[0] ?? 1;
+  if (adaptiveAnswer !== null && ADAPTIVE_DELTA[a0]) {
+    const delta = ADAPTIVE_DELTA[a0][adaptiveAnswer] ?? 0;
+    dims[0].score = Math.max(5, Math.min(98, dims[0].score + delta));
+  }
+
+  return {
+    dimensions: dims,
+    attachmentType: ATTACHMENT_TYPES[a0] || "secure",
+    valueType:  VALUE_TYPES[answers[2] ?? 1] || "warmth",
+    goalType:   GOAL_TYPES[answers[11] ?? 0] || "partnership",
+    commType:   COMM_TYPES[answers[3] ?? 1] || "reflective",
+    overall:    Math.round(dims.reduce((a, d) => a + d.score, 0) / dims.length),
+  };
 }
 
+function computeCompatibility(pA, pB, mode) {
+  const matrix = mode === "romance" ? ATTACH_ROMANCE : ATTACH_FRIENDSHIP;
+  const weights = mode === "romance" ? W_ROMANCE : W_FRIENDSHIP;
+  const atA = pA.attachmentType || "secure";
+  const atB = pB.attachmentType || "secure";
+  const attachScore = matrix[atA]?.[atB] ?? 65;
+
+  let total = weights[0] * attachScore;
+  for (let i = 1; i < 12; i++) {
+    const sA = pA.dimensions[i]?.score ?? 65;
+    const sB = pB.dimensions[i]?.score ?? 65;
+    total += weights[i] * (100 - Math.abs(sA - sB));
+  }
+  return Math.round(Math.min(99, Math.max(10, total)));
+}
+
+function getMatchHighlights(pA, pB, mode) {
+  const out = [];
+  const atA = pA.attachmentType, atB = pB.attachmentType;
+
+  if (mode === "romance") {
+    if (atA === "secure" || atB === "secure") out.push("Complementary attachment styles");
+    else if (atA === atB) out.push("Similar attachment patterns");
+    const valDiff = Math.abs((pA.dimensions[2]?.score ?? 65) - (pB.dimensions[2]?.score ?? 65));
+    if (valDiff < 15) out.push("Deep values alignment");
+    const goalDiff = Math.abs((pA.dimensions[11]?.score ?? 70) - (pB.dimensions[11]?.score ?? 70));
+    if (goalDiff < 15) out.push("Aligned relationship goals");
+    const confDiff = Math.abs((pA.dimensions[4]?.score ?? 70) - (pB.dimensions[4]?.score ?? 70));
+    if (confDiff < 15) out.push("Compatible conflict approach");
+    const vulnAvg = ((pA.dimensions[6]?.score ?? 65) + (pB.dimensions[6]?.score ?? 65)) / 2;
+    if (vulnAvg > 70) out.push("Both open to emotional depth");
+  } else {
+    const valDiff = Math.abs((pA.dimensions[2]?.score ?? 65) - (pB.dimensions[2]?.score ?? 65));
+    if (valDiff < 15) out.push("Shared core values");
+    const commDiff = Math.abs((pA.dimensions[3]?.score ?? 70) - (pB.dimensions[3]?.score ?? 70));
+    if (commDiff < 15) out.push("Natural communication rhythm");
+    const growthAvg = ((pA.dimensions[9]?.score ?? 65) + (pB.dimensions[9]?.score ?? 65)) / 2;
+    if (growthAvg > 72) out.push("Great accountability partners");
+    const openDiff = Math.abs((pA.dimensions[10]?.score ?? 65) - (pB.dimensions[10]?.score ?? 65));
+    if (openDiff < 15) out.push("Matched openness to experience");
+    const indDiff = Math.abs((pA.dimensions[5]?.score ?? 70) - (pB.dimensions[5]?.score ?? 70));
+    if (indDiff < 15) out.push("Compatible independence needs");
+  }
+
+  if (out.length < 3) out.push("Strong overall psychological fit");
+  return out.slice(0, 3);
+}
+
+// ── DEMO PROFILES (for demo mode when no real matches) ────────────────────────
+const DEMO_PROFILES = [
+  { id: "1", name: "Zara M.", city: "Toronto, ON", avatar: "Z",
+    attachmentType: "secure", valueType: "warmth", goalType: "partnership", commType: "reflective",
+    dimensions: DIM_LABELS.map((label, i) => ({ label, color: DIM_COLORS[i], score: [88,82,90,78,85,76,80,84,88,85,80,90][i] })) },
+  { id: "2", name: "Jordan K.", city: "Toronto, ON", avatar: "J",
+    attachmentType: "secure", valueType: "growth", goalType: "independence", commType: "direct",
+    dimensions: DIM_LABELS.map((label, i) => ({ label, color: DIM_COLORS[i], score: [85,76,82,88,80,85,70,76,72,90,88,82][i] })) },
+  { id: "3", name: "Sofia T.", city: "Toronto, ON", avatar: "S",
+    attachmentType: "anxious", valueType: "warmth", goalType: "partnership", commType: "reflective",
+    dimensions: DIM_LABELS.map((label, i) => ({ label, color: DIM_COLORS[i], score: [44,68,85,72,68,58,85,42,88,70,72,88][i] })) },
+  { id: "4", name: "Alex R.", city: "Toronto, ON", avatar: "A",
+    attachmentType: "avoidant", valueType: "independence", goalType: "secure_base", commType: "selective",
+    dimensions: DIM_LABELS.map((label, i) => ({ label, color: DIM_COLORS[i], score: [52,78,68,72,76,88,55,72,68,80,90,80][i] })) },
+  { id: "5", name: "Maya P.", city: "Toronto, ON", avatar: "M",
+    attachmentType: "secure", valueType: "adventure", goalType: "exploring", commType: "direct",
+    dimensions: DIM_LABELS.map((label, i) => ({ label, color: DIM_COLORS[i], score: [90,80,68,85,72,80,82,78,76,85,92,52][i] })) },
+  { id: "6", name: "Riley C.", city: "Toronto, ON", avatar: "R",
+    attachmentType: "secure", valueType: "growth", goalType: "partnership", commType: "reflective",
+    dimensions: DIM_LABELS.map((label, i) => ({ label, color: DIM_COLORS[i], score: [88,88,90,82,85,72,78,80,80,92,80,88][i] })) },
+];
+
+function getDemoMatches(userProfile, mode) {
+  return DEMO_PROFILES.map(p => ({
+    ...p,
+    score: computeCompatibility(userProfile, p, mode),
+    highlights: getMatchHighlights(userProfile, p, mode),
+  })).sort((a, b) => b.score - a.score);
+}
+
+// ── PLACE FALLBACK ─────────────────────────────────────────────────────────────
+const PLACE_FALLBACK = [
+  { id: "toronto",   label: "Toronto, Ontario, Canada",      latitude: 43.6532,  longitude: -79.3832  },
+  { id: "vancouver", label: "Vancouver, BC, Canada",         latitude: 49.2827,  longitude: -123.1207 },
+  { id: "montreal",  label: "Montreal, QC, Canada",          latitude: 45.5017,  longitude: -73.5673  },
+  { id: "new-york",  label: "New York City, NY, USA",        latitude: 40.7128,  longitude: -74.006   },
+  { id: "london",    label: "London, England, UK",           latitude: 51.5074,  longitude: -0.1278   },
+  { id: "sydney",    label: "Sydney, NSW, Australia",        latitude: -33.8688, longitude: 151.2093  },
+  { id: "berlin",    label: "Berlin, Germany",               latitude: 52.52,    longitude: 13.405    },
+  { id: "paris",     label: "Paris, France",                 latitude: 48.8566,  longitude: 2.3522    },
+  { id: "singapore", label: "Singapore",                     latitude: 1.3521,   longitude: 103.8198  },
+  { id: "tokyo",     label: "Tokyo, Japan",                  latitude: 35.6762,  longitude: 139.6503  },
+];
+function safeTimezone(lat, lon) { try { return tzLookup(lat, lon); } catch (_) { return ""; } }
 function buildPlaceFallback(query, limit = 6) {
   const q = (query || "").toLowerCase();
-  const results = PLACE_FALLBACK.filter(p =>
-    !q || p.label.toLowerCase().includes(q)
-  ).slice(0, limit);
-  return (results.length ? results : PLACE_FALLBACK.slice(0, limit)).map(p => ({
+  const r = PLACE_FALLBACK.filter(p => !q || p.label.toLowerCase().includes(q)).slice(0, limit);
+  return (r.length ? r : PLACE_FALLBACK.slice(0, limit)).map(p => ({
     ...p, timezone: safeTimezone(p.latitude, p.longitude),
   }));
 }
 
-// ── API HELPERS ───────────────────────────────────────────────────────────────
+// ── API HELPERS ────────────────────────────────────────────────────────────────
 async function apiRequest(method, path, payload, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
   try {
     const res = await fetch(`${API_BASE_URL}${path}`, {
-      method,
-      headers,
-      body: payload ? JSON.stringify(payload) : undefined,
+      method, headers, body: payload ? JSON.stringify(payload) : undefined,
     });
     let body = null;
     try { body = await res.json(); } catch (_) {}
     return { ok: res.ok, status: res.status, body };
   } catch (e) {
-    const err = new Error(`network_error: ${e?.message || "failed_to_fetch"}`);
-    err.status = 0;
-    throw err;
+    const err = new Error(`network_error: ${e?.message || "failed"}`);
+    err.status = 0; throw err;
   }
 }
-
-function normalizeError(bodyOrErr, fallback = "request_failed") {
-  if (!bodyOrErr) return fallback;
-  if (bodyOrErr instanceof Error) return bodyOrErr.message || fallback;
-  const d = bodyOrErr.detail ?? bodyOrErr.error ?? bodyOrErr.message;
+function normalizeError(x, fallback = "Something went wrong") {
+  if (!x) return fallback;
+  if (x instanceof Error) return x.message || fallback;
+  const d = x.detail ?? x.error ?? x.message;
   if (typeof d === "string" && d.trim()) return d;
   if (Array.isArray(d)) return d.map(i => (typeof i === "string" ? i : i?.msg || "invalid")).join("; ");
   return fallback;
 }
-
-function makeUserId(name) {
-  const clean = (name || "user").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-  return `${clean || "user"}-${String(Date.now()).slice(-6)}`;
-}
-
 function validateDate(v) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "Use YYYY-MM-DD format";
   const d = new Date(`${v}T00:00:00Z`);
@@ -273,71 +432,63 @@ function validateDate(v) {
   return "";
 }
 function validateTime(v) {
-  if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(v)) return "Use HH:MM format (24h)";
-  return "";
+  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(v) ? "" : "Use HH:MM format (24h)";
 }
 
-// ── SHARED UI COMPONENTS ──────────────────────────────────────────────────────
+// ── SHARED UI ──────────────────────────────────────────────────────────────────
 function GradBtn({ label, onPress, disabled, style }) {
   return (
-    <TouchableOpacity onPress={onPress} disabled={disabled} style={[{ opacity: disabled ? 0.45 : 1 }, style]}>
+    <TouchableOpacity onPress={onPress} disabled={disabled} style={[{ opacity: disabled ? 0.4 : 1 }, style]}>
       <LinearGradient colors={["#7B2FBE", "#E040FB"]} start={[0, 0]} end={[1, 0]} style={s.gradBtn}>
-        <Text style={s.gradBtnText}>{label}</Text>
+        <Text style={s.gradBtnTxt}>{label}</Text>
       </LinearGradient>
     </TouchableOpacity>
   );
 }
-
-function GhostBtn({ label, onPress, disabled, style }) {
+function GhostBtn({ label, onPress, disabled, style, danger }) {
   return (
-    <TouchableOpacity onPress={onPress} disabled={disabled} style={[s.ghostBtn, disabled && { opacity: 0.45 }, style]}>
-      <Text style={s.ghostBtnText}>{label}</Text>
+    <TouchableOpacity onPress={onPress} disabled={disabled}
+      style={[s.ghostBtn, disabled && { opacity: 0.4 }, danger && { borderColor: C.error }, style]}>
+      <Text style={[s.ghostBtnTxt, danger && { color: C.error }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
-
 function Badge({ label, color = C.teal }) {
   return (
     <View style={[s.badge, { borderColor: color + "44", backgroundColor: color + "18" }]}>
-      <Text style={[s.badgeText, { color }]}>{label}</Text>
+      <Text style={[s.badgeTxt, { color }]}>{label}</Text>
     </View>
   );
 }
-
 function DimBar({ label, score, color }) {
-  const pct = Math.min(100, Math.max(0, score));
   return (
     <View style={s.dimRow}>
       <Text style={s.dimLabel} numberOfLines={1}>{label}</Text>
-      <View style={s.dimBarBg}>
-        <View style={[s.dimBarFill, { width: `${pct}%`, backgroundColor: color }]} />
-      </View>
-      <Text style={s.dimScore}>{pct}%</Text>
+      <View style={s.dimBg}><View style={[s.dimFill, { width: `${Math.min(100, score)}%`, backgroundColor: color }]} /></View>
+      <Text style={s.dimPct}>{score}%</Text>
     </View>
   );
 }
-
 function Hdr({ title, subtitle, onBack }) {
   return (
-    <View style={s.screenHdr}>
+    <View style={s.hdr}>
       {onBack && (
         <TouchableOpacity onPress={onBack} style={s.backBtn}>
           <Text style={s.backIcon}>←</Text>
         </TouchableOpacity>
       )}
       <View style={{ flex: 1 }}>
-        <Text style={s.screenTitle}>{title}</Text>
-        {subtitle ? <Text style={s.screenSub}>{subtitle}</Text> : null}
+        <Text style={s.hdrTitle}>{title}</Text>
+        {subtitle ? <Text style={s.hdrSub}>{subtitle}</Text> : null}
       </View>
     </View>
   );
 }
 
-// ── 1. SPLASH SCREEN ──────────────────────────────────────────────────────────
+// ── 1. SPLASH ──────────────────────────────────────────────────────────────────
 function SplashScreen({ onDone }) {
-  const fade = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.85)).current;
-
+  const fade  = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.82)).current;
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fade,  { toValue: 1, duration: 800, useNativeDriver: true }),
@@ -346,84 +497,52 @@ function SplashScreen({ onDone }) {
     const t = setTimeout(onDone, 2200);
     return () => clearTimeout(t);
   }, []);
-
   return (
     <LinearGradient colors={["#0B0E14", "#0F1525", "#161B30"]} style={s.fill}>
       <StatusBar style="light" />
       <Animated.View style={[s.splashCenter, { opacity: fade, transform: [{ scale }] }]}>
-        <View style={s.splashLogo}>
-          <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.splashLogoGrad}>
-            <Text style={s.splashLogoIcon}>✦</Text>
-          </LinearGradient>
-        </View>
+        <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.splashLogoBox}>
+          <Text style={s.splashLogoIcon}>✦</Text>
+        </LinearGradient>
         <Text style={s.splashWordmark}>SoulMatch</Text>
         <Text style={s.splashTagline}>Know yourself.{"\n"}Find your match.</Text>
       </Animated.View>
-      <View style={s.splashFooter}>
-        <View style={s.dot} />
-        <View style={[s.dot, { backgroundColor: C.violet }]} />
-        <View style={[s.dot, { backgroundColor: C.pink }]} />
+      <View style={s.splashDots}>
+        {[C.purple, C.violet, C.pink].map((c, i) => (
+          <View key={i} style={[s.dot, { backgroundColor: c }]} />
+        ))}
       </View>
     </LinearGradient>
   );
 }
 
-// ── 2. LOGIN SCREEN ───────────────────────────────────────────────────────────
+// ── 2. LOGIN ───────────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin, onGoRegister, error, busy }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
+  const [email, setEmail]     = useState("");
+  const [password, setPass]   = useState("");
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.fill}>
-          <ScrollView contentContainerStyle={s.authContainer} keyboardShouldPersistTaps="handled">
+          <ScrollView contentContainerStyle={s.authScroll} keyboardShouldPersistTaps="handled">
             <View style={s.authTop}>
               <Text style={s.wordmark}>✦ SoulMatch</Text>
               <Badge label="Beta · Toronto" color={C.teal} />
             </View>
             <Text style={s.authTitle}>Welcome back</Text>
-            <Text style={s.authSub}>Sign in to your account</Text>
-
+            <Text style={s.authSub}>Sign in to continue</Text>
             <View style={s.formCard}>
-              <View style={s.inputWrap}>
-                <Text style={s.inputLabel}>Email</Text>
-                <TextInput
-                  style={s.input}
-                  placeholder="your@email.com"
-                  placeholderTextColor={C.muted}
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-              </View>
-              <View style={s.inputWrap}>
-                <Text style={s.inputLabel}>Password</Text>
-                <TextInput
-                  style={s.input}
-                  placeholder="Your password"
-                  placeholderTextColor={C.muted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
-              </View>
+              <Text style={s.inputLabel}>Email</Text>
+              <TextInput style={s.input} placeholder="your@email.com" placeholderTextColor={C.muted} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+              <Text style={s.inputLabel}>Password</Text>
+              <TextInput style={s.input} placeholder="Your password" placeholderTextColor={C.muted} value={password} onChangeText={setPass} secureTextEntry autoCapitalize="none" />
               <TouchableOpacity><Text style={s.forgotLink}>Forgot password?</Text></TouchableOpacity>
             </View>
-
-            {error ? <Text style={s.errorMsg}>{error}</Text> : null}
-
-            <GradBtn
-              label={busy ? "Signing in…" : "Sign in"}
-              onPress={() => onLogin(email, password)}
-              disabled={!email || !password || busy}
-              style={{ marginTop: 8 }}
-            />
+            {error ? <Text style={s.errMsg}>{error}</Text> : null}
+            <GradBtn label={busy ? "Signing in…" : "Sign in →"} onPress={() => onLogin(email, password)} disabled={!email || !password || busy} style={{ marginTop: 8 }} />
             <TouchableOpacity onPress={onGoRegister} style={s.switchLink}>
-              <Text style={s.switchLinkText}>New here? <Text style={{ color: C.violet }}>Create account →</Text></Text>
+              <Text style={s.switchLinkTxt}>New here? <Text style={{ color: C.violet }}>Create account →</Text></Text>
             </TouchableOpacity>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -432,12 +551,12 @@ function LoginScreen({ onLogin, onGoRegister, error, busy }) {
   );
 }
 
-// ── 3. REGISTRATION SCREEN (multi-step) ───────────────────────────────────────
+// ── 3. REGISTRATION (4-step) ───────────────────────────────────────────────────
 function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
-  const [step, setStep] = useState(0);
+  const [step, setStep]         = useState(0);
   const [name, setName]         = useState("");
   const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPass]     = useState("");
   const [birthDate, setBD]      = useState("");
   const [birthTime, setBT]      = useState("");
   const [placeQuery, setPQ]     = useState("");
@@ -446,11 +565,10 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
   const [selectedPlace, setSP]  = useState(null);
   const [romance, setRomance]   = useState(true);
   const [friendship, setFriend] = useState(true);
-  const [preference, setPref]   = useState("psych_behavior_astro");
+  const [pref, setPref]         = useState("psych_behavior_astro");
   const [consentP, setCP]       = useState(false);
   const [consentS, setCS]       = useState(false);
   const [fieldErr, setFE]       = useState("");
-
   const STEPS = ["Basics", "Birth data", "Goals", "Consent"];
 
   async function searchPlace() {
@@ -458,17 +576,12 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
     setPL(true); setFE("");
     try {
       const res = await fetch(`${API_BASE_URL}/places/search`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: placeQuery.trim(), limit: 6 }),
       });
-      if (res.ok) {
-        const data = await res.json();
-        const mapped = (data.results || []).map(p => ({
-          ...p, timezone: safeTimezone(+p.latitude, +p.longitude),
-        }));
-        setPR(mapped.length ? mapped : buildPlaceFallback(placeQuery));
-      } else { setPR(buildPlaceFallback(placeQuery)); }
+      const data = res.ok ? await res.json() : null;
+      const mapped = (data?.results || []).map(p => ({ ...p, timezone: safeTimezone(+p.latitude, +p.longitude) }));
+      setPR(mapped.length ? mapped : buildPlaceFallback(placeQuery));
     } catch (_) { setPR(buildPlaceFallback(placeQuery)); }
     finally { setPL(false); }
   }
@@ -477,19 +590,16 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
     if (step === 0) return name.trim() && email.trim() && password.trim().length >= 8;
     if (step === 1) return birthDate.trim() && birthTime.trim() && selectedPlace;
     if (step === 2) return romance || friendship;
-    if (step === 3) return consentP && consentS;
-    return true;
+    return consentP && consentS;
   }
-
   function advance() {
     if (step === 1) {
-      const de = validateDate(birthDate.trim());
-      const te = validateTime(birthTime.trim());
+      const de = validateDate(birthDate.trim()), te = validateTime(birthTime.trim());
       if (de || te) { setFE(de || te); return; }
     }
     if (step < 3) { setStep(s => s + 1); setFE(""); return; }
     const goals = [romance && "romance", friendship && "friendship"].filter(Boolean);
-    onComplete({ name, email, password, birthDate, birthTime, selectedPlace, goals, preference, consentP, consentS });
+    onComplete({ name, email, password, birthDate, birthTime, selectedPlace, goals, pref, consentP, consentS });
   }
 
   return (
@@ -497,16 +607,13 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.fill}>
-          <ScrollView contentContainerStyle={s.authContainer} keyboardShouldPersistTaps="handled">
-            <View style={s.authTop}>
-              <Text style={s.wordmark}>✦ SoulMatch</Text>
-            </View>
-
+          <ScrollView contentContainerStyle={s.authScroll} keyboardShouldPersistTaps="handled">
+            <View style={s.authTop}><Text style={s.wordmark}>✦ SoulMatch</Text></View>
             {/* Step dots */}
             <View style={s.stepDots}>
-              {STEPS.map((label, i) => (
+              {STEPS.map((_, i) => (
                 <View key={i} style={s.stepDotWrap}>
-                  <View style={[s.stepDot, i <= step && s.stepDotActive, i === step && s.stepDotCurrent]}>
+                  <View style={[s.stepDot, i <= step && s.stepDotActive, i === step && s.stepDotCur]}>
                     <Text style={[s.stepDotNum, i <= step && { color: "#fff" }]}>{i + 1}</Text>
                   </View>
                   {i < STEPS.length - 1 && <View style={[s.stepLine, i < step && s.stepLineActive]} />}
@@ -515,44 +622,30 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
             </View>
             <Text style={s.stepLabel}>{STEPS[step]}</Text>
 
-            {/* Step 0: Basics */}
             {step === 0 && (
               <View style={s.formCard}>
-                <View style={s.inputWrap}>
-                  <Text style={s.inputLabel}>Your name</Text>
-                  <TextInput style={s.input} placeholder="First name" placeholderTextColor={C.muted} value={name} onChangeText={setName} />
-                </View>
-                <View style={s.inputWrap}>
-                  <Text style={s.inputLabel}>Email</Text>
-                  <TextInput style={s.input} placeholder="your@email.com" placeholderTextColor={C.muted} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-                </View>
-                <View style={s.inputWrap}>
-                  <Text style={s.inputLabel}>Password</Text>
-                  <TextInput style={s.input} placeholder="Min 8 characters" placeholderTextColor={C.muted} value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" />
-                </View>
+                <Text style={s.inputLabel}>Your name</Text>
+                <TextInput style={s.input} placeholder="First name" placeholderTextColor={C.muted} value={name} onChangeText={setName} />
+                <Text style={s.inputLabel}>Email</Text>
+                <TextInput style={s.input} placeholder="your@email.com" placeholderTextColor={C.muted} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+                <Text style={s.inputLabel}>Password</Text>
+                <TextInput style={s.input} placeholder="Min 8 characters" placeholderTextColor={C.muted} value={password} onChangeText={setPass} secureTextEntry autoCapitalize="none" />
               </View>
             )}
 
-            {/* Step 1: Birth data */}
             {step === 1 && (
               <View style={s.formCard}>
-                <Text style={s.formNote}>Birth data is used for astrology matching (optional feature). Psychology matching doesn't require it.</Text>
-                <View style={s.inputWrap}>
-                  <Text style={s.inputLabel}>Birth date</Text>
-                  <TextInput style={s.input} placeholder="YYYY-MM-DD" placeholderTextColor={C.muted} value={birthDate} onChangeText={v => { setBD(v); setFE(""); }} />
-                </View>
-                <View style={s.inputWrap}>
-                  <Text style={s.inputLabel}>Birth time (24h)</Text>
-                  <TextInput style={s.input} placeholder="HH:MM" placeholderTextColor={C.muted} value={birthTime} onChangeText={v => { setBT(v); setFE(""); }} />
-                </View>
-                <View style={s.inputWrap}>
-                  <Text style={s.inputLabel}>Birth city</Text>
-                  <View style={s.searchRow}>
-                    <TextInput style={[s.input, { flex: 1 }]} placeholder="City, Country" placeholderTextColor={C.muted} value={placeQuery} onChangeText={setPQ} />
-                    <TouchableOpacity style={s.searchBtn} onPress={searchPlace} disabled={placeLoading}>
-                      <Text style={s.searchBtnText}>{placeLoading ? "…" : "Search"}</Text>
-                    </TouchableOpacity>
-                  </View>
+                <Text style={s.formNote}>Used for the optional astrology layer. Psychology matching works without it.</Text>
+                <Text style={s.inputLabel}>Birth date</Text>
+                <TextInput style={s.input} placeholder="YYYY-MM-DD" placeholderTextColor={C.muted} value={birthDate} onChangeText={v => { setBD(v); setFE(""); }} />
+                <Text style={s.inputLabel}>Birth time (24h)</Text>
+                <TextInput style={s.input} placeholder="HH:MM" placeholderTextColor={C.muted} value={birthTime} onChangeText={v => { setBT(v); setFE(""); }} />
+                <Text style={s.inputLabel}>Birth city</Text>
+                <View style={s.searchRow}>
+                  <TextInput style={[s.input, { flex: 1 }]} placeholder="City, Country" placeholderTextColor={C.muted} value={placeQuery} onChangeText={setPQ} />
+                  <TouchableOpacity style={s.searchBtn} onPress={searchPlace} disabled={placeLoading}>
+                    <Text style={s.searchBtnTxt}>{placeLoading ? "…" : "Search"}</Text>
+                  </TouchableOpacity>
                 </View>
                 {placeResults.map(p => (
                   <TouchableOpacity key={p.id} style={[s.placeCard, selectedPlace?.id === p.id && s.placeCardSel]} onPress={() => setSP(p)}>
@@ -560,25 +653,20 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
                     <Text style={s.placeMeta}>{p.timezone || "—"}</Text>
                   </TouchableOpacity>
                 ))}
-                {selectedPlace && (
-                  <View style={s.selectedPlaceBox}>
-                    <Text style={s.selectedPlaceText}>✓ {selectedPlace.label}</Text>
-                  </View>
-                )}
-                {fieldErr ? <Text style={s.errorMsg}>{fieldErr}</Text> : null}
+                {selectedPlace && <View style={s.selPlaceBox}><Text style={s.selPlaceTxt}>✓ {selectedPlace.label}</Text></View>}
+                {fieldErr ? <Text style={s.errMsg}>{fieldErr}</Text> : null}
               </View>
             )}
 
-            {/* Step 2: Goals */}
             {step === 2 && (
               <View style={s.formCard}>
                 <Text style={s.inputLabel}>I'm looking for</Text>
                 <View style={s.toggleRow}>
-                  <View style={s.toggleLabel}><Text style={s.body}>💕 Romance</Text><Text style={s.muted}>Romantic partnership</Text></View>
+                  <View style={{ flex: 1 }}><Text style={s.body}>💕 Romance</Text><Text style={s.muted}>Romantic partnership</Text></View>
                   <Switch value={romance} onValueChange={setRomance} trackColor={{ true: C.violet }} thumbColor="#fff" />
                 </View>
                 <View style={s.toggleRow}>
-                  <View style={s.toggleLabel}><Text style={s.body}>🤝 Friendship</Text><Text style={s.muted}>Meaningful connections</Text></View>
+                  <View style={{ flex: 1 }}><Text style={s.body}>🤝 Friendship</Text><Text style={s.muted}>Meaningful connections</Text></View>
                   <Switch value={friendship} onValueChange={setFriend} trackColor={{ true: C.teal }} thumbColor="#fff" />
                 </View>
                 <Text style={[s.inputLabel, { marginTop: 16 }]}>Matching method</Text>
@@ -586,8 +674,8 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
                   { val: "psych_behavior", title: "Psychology + Behaviour", sub: "Core compatibility. No astrology." },
                   { val: "psych_behavior_astro", title: "Psychology + Behaviour + Astrology", sub: "Full picture including your birth chart." },
                 ].map(opt => (
-                  <TouchableOpacity key={opt.val} style={[s.prefCard, preference === opt.val && s.prefCardSel]} onPress={() => setPref(opt.val)}>
-                    <View style={[s.prefDot, preference === opt.val && s.prefDotSel]} />
+                  <TouchableOpacity key={opt.val} style={[s.prefCard, pref === opt.val && s.prefCardSel]} onPress={() => setPref(opt.val)}>
+                    <View style={[s.prefDot, pref === opt.val && s.prefDotSel]} />
                     <View style={{ flex: 1 }}>
                       <Text style={s.prefTitle}>{opt.title}</Text>
                       <Text style={s.prefSub}>{opt.sub}</Text>
@@ -597,10 +685,9 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
               </View>
             )}
 
-            {/* Step 3: Consent */}
             {step === 3 && (
               <View style={s.formCard}>
-                <Text style={s.formNote}>Before we create your profile, we need your consent for how we handle your data.</Text>
+                <Text style={s.formNote}>Before we create your profile, we need your consent for how we store your data.</Text>
                 <View style={s.toggleRow}>
                   <Text style={[s.body, { flex: 1 }]}>I agree to the Privacy Policy and secure data storage</Text>
                   <Switch value={consentP} onValueChange={setCP} trackColor={{ true: C.violet }} thumbColor="#fff" />
@@ -612,20 +699,11 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
               </View>
             )}
 
-            {error ? <Text style={s.errorMsg}>{error}</Text> : null}
-
+            {error ? <Text style={s.errMsg}>{error}</Text> : null}
             <View style={s.btnRow}>
-              {step > 0 ? (
-                <GhostBtn label="Back" onPress={() => setStep(s => s - 1)} style={{ flex: 1 }} />
-              ) : (
-                <GhostBtn label="Sign in instead" onPress={onGoLogin} style={{ flex: 1 }} />
-              )}
-              <GradBtn
-                label={step === 3 ? (busy ? "Creating…" : "Create account") : "Continue →"}
-                onPress={advance}
-                disabled={!canAdvance() || busy}
-                style={{ flex: 2 }}
-              />
+              {step > 0 ? <GhostBtn label="Back" onPress={() => setStep(s => s - 1)} style={{ flex: 1 }} />
+                        : <GhostBtn label="Sign in instead" onPress={onGoLogin} style={{ flex: 1 }} />}
+              <GradBtn label={step === 3 ? (busy ? "Creating…" : "Create account") : "Continue →"} onPress={advance} disabled={!canAdvance() || busy} style={{ flex: 2 }} />
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -634,66 +712,102 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
   );
 }
 
-// ── 4. ASSESSMENT SCREEN ──────────────────────────────────────────────────────
+// ── 4. ASSESSMENT (adaptive flow) ─────────────────────────────────────────────
 function AssessmentScreen({ onComplete, onSkip }) {
-  const [qIdx, setQIdx]     = useState(0);
-  const [answers, setAns]   = useState({});
-  const [selected, setSel]  = useState(null);
+  const [phase, setPhase]           = useState("main"); // "main" | "adaptive"
+  const [qIdx, setQIdx]             = useState(0);
+  const [answers, setAnswers]       = useState({});
+  const [adaptiveAns, setAdaptive]  = useState(null);
+  const [selected, setSel]          = useState(null);
   const fade = useRef(new Animated.Value(1)).current;
-  const q = QUESTIONS[qIdx];
-  const progress = (qIdx / QUESTIONS.length) * 100;
 
-  function pickOption(i) { setSel(i); }
+  const isAdaptive = phase === "adaptive";
+  const q = isAdaptive ? ADAPTIVE_QUESTIONS[answers[0] ?? 0] : QUESTIONS[qIdx];
+
+  // Step numbering: Q0=0, adaptive=1, Q1=2, Q2=3, … Q11=12  → 13 total steps
+  let stepNum = 0;
+  if (isAdaptive) stepNum = 1;
+  else if (qIdx > 0) stepNum = qIdx + 1;
+  const progress = (stepNum / 12) * 100;
+  const totalLabel = `${stepNum + 1} / 13`;
+
+  function animNext(fn) {
+    Animated.timing(fade, { toValue: 0, duration: 140, useNativeDriver: true }).start(() => {
+      fn();
+      Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+    });
+  }
 
   function advance() {
     if (selected === null) return;
+
+    if (!isAdaptive && qIdx === 0) {
+      setAnswers(prev => ({ ...prev, 0: selected }));
+      animNext(() => { setPhase("adaptive"); setSel(null); });
+      return;
+    }
+
+    if (isAdaptive) {
+      setAdaptive(selected);
+      animNext(() => { setPhase("main"); setQIdx(1); setSel(null); });
+      return;
+    }
+
     const next = { ...answers, [qIdx]: selected };
-    setAns(next);
-    if (qIdx === QUESTIONS.length - 1) { onComplete(next); return; }
-    Animated.sequence([
-      Animated.timing(fade, { toValue: 0, duration: 150, useNativeDriver: true }),
-    ]).start(() => {
-      setQIdx(i => i + 1);
-      setSel(null);
-      Animated.timing(fade, { toValue: 1, duration: 250, useNativeDriver: true }).start();
-    });
+    setAnswers(next);
+
+    if (qIdx === QUESTIONS.length - 1) {
+      onComplete(next, adaptiveAns);
+      return;
+    }
+    animNext(() => { setQIdx(i => i + 1); setSel(null); });
   }
+
+  function goBack() {
+    if (isAdaptive) {
+      animNext(() => { setPhase("main"); setQIdx(0); setSel(answers[0] ?? null); });
+      return;
+    }
+    if (qIdx === 1) {
+      animNext(() => { setPhase("adaptive"); setSel(adaptiveAns); });
+      return;
+    }
+    if (qIdx > 0) {
+      animNext(() => { setQIdx(i => i - 1); setSel(answers[qIdx - 1] ?? null); });
+    }
+  }
+
+  const canGoBack = isAdaptive || qIdx > 0;
 
   return (
     <LinearGradient colors={["#0B0E14", "#0F1420"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <View style={s.assessHdr}>
-          <TouchableOpacity onPress={onSkip}><Text style={s.skipText}>Skip for now</Text></TouchableOpacity>
-          <Text style={s.assessCount}>{qIdx + 1} / {QUESTIONS.length}</Text>
+          <TouchableOpacity onPress={onSkip}><Text style={s.skipTxt}>Skip</Text></TouchableOpacity>
+          <Text style={s.assessCount}>{totalLabel}</Text>
         </View>
-
-        {/* Progress bar */}
-        <View style={s.progressBg}>
-          <View style={[s.progressFill, { width: `${progress}%` }]} />
-        </View>
+        <View style={s.progressBg}><View style={[s.progressFill, { width: `${progress}%` }]} /></View>
 
         <ScrollView contentContainerStyle={s.assessBody} keyboardShouldPersistTaps="handled">
           <Animated.View style={{ opacity: fade }}>
+            {isAdaptive && (
+              <View style={s.adaptiveBanner}>
+                <Text style={s.adaptiveBannerTxt}>✦ Follow-up based on your previous answer</Text>
+              </View>
+            )}
             <View style={s.dimBadge}>
               <Text style={s.dimBadgeEmoji}>{q.emoji}</Text>
-              <Text style={s.dimBadgeLabel}>{q.dimension}</Text>
+              <Text style={s.dimBadgeLbl}>{q.dimension}</Text>
             </View>
-
-            <Text style={s.assessQuestion}>{q.question}</Text>
-
+            <Text style={s.assessQ}>{q.question}</Text>
             <View style={s.options}>
               {q.options.map((opt, i) => (
-                <TouchableOpacity
-                  key={i}
-                  style={[s.optionCard, selected === i && s.optionCardSel]}
-                  onPress={() => pickOption(i)}
-                  activeOpacity={0.75}
-                >
-                  <View style={[s.optionDot, selected === i && s.optionDotSel]}>
-                    {selected === i && <Text style={s.optionCheck}>✓</Text>}
+                <TouchableOpacity key={i} style={[s.optCard, selected === i && s.optCardSel]} onPress={() => setSel(i)} activeOpacity={0.75}>
+                  <View style={[s.optDot, selected === i && s.optDotSel]}>
+                    {selected === i && <Text style={s.optCheck}>✓</Text>}
                   </View>
-                  <Text style={[s.optionText, selected === i && s.optionTextSel]}>{opt}</Text>
+                  <Text style={[s.optTxt, selected === i && s.optTxtSel]}>{opt}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -701,14 +815,12 @@ function AssessmentScreen({ onComplete, onSkip }) {
         </ScrollView>
 
         <View style={s.assessFooter}>
-          {qIdx > 0 && (
-            <GhostBtn label="← Back" onPress={() => { setQIdx(i => i - 1); setSel(answers[qIdx - 1] ?? null); }} style={{ flex: 1 }} />
-          )}
+          {canGoBack && <GhostBtn label="← Back" onPress={goBack} style={{ flex: 1 }} />}
           <GradBtn
-            label={qIdx === QUESTIONS.length - 1 ? "Complete →" : "Next →"}
+            label={!isAdaptive && qIdx === QUESTIONS.length - 1 ? "Complete →" : "Next →"}
             onPress={advance}
             disabled={selected === null}
-            style={{ flex: 2 }}
+            style={{ flex: canGoBack ? 2 : 1 }}
           />
         </View>
       </SafeAreaView>
@@ -716,73 +828,62 @@ function AssessmentScreen({ onComplete, onSkip }) {
   );
 }
 
-// ── 5. PROFILE SCREEN ─────────────────────────────────────────────────────────
-function ProfileScreen({ user, dims, onTakeAssessment, onViewReports, onViewMatches, onOpenSettings }) {
+// ── 5. PROFILE ─────────────────────────────────────────────────────────────────
+function ProfileScreen({ user, profile, assessed, onAssess, onReports, onMatches, onSettings }) {
   const initials = (user?.name || "U").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
-  const assessed = dims && dims.length > 0;
-  const avgScore = assessed ? Math.round(dims.reduce((a, d) => a + d.score, 0) / dims.length) : null;
+  const dims = profile?.dimensions || [];
 
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
-        <ScrollView contentContainerStyle={s.profileContainer}>
+        <ScrollView contentContainerStyle={s.profileScroll}>
           <View style={s.profileHdr}>
             <Text style={s.wordmark}>✦ SoulMatch</Text>
-            <TouchableOpacity onPress={onOpenSettings}><Text style={s.settingsIcon}>⚙️</Text></TouchableOpacity>
+            <TouchableOpacity onPress={onSettings}><Text style={{ fontSize: 22 }}>⚙️</Text></TouchableOpacity>
           </View>
-
-          {/* Avatar */}
           <View style={s.avatarWrap}>
             <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.avatar}>
-              <Text style={s.avatarText}>{initials}</Text>
+              <Text style={s.avatarTxt}>{initials}</Text>
             </LinearGradient>
-            {assessed && (
+            {assessed && profile && (
               <View style={s.avatarBadge}>
-                <Text style={s.avatarBadgeText}>{avgScore}%</Text>
+                <Text style={s.avatarBadgeTxt}>{profile.overall}%</Text>
               </View>
             )}
           </View>
-
-          <Text style={s.profileName}>{user?.name || "Your name"}</Text>
+          <Text style={s.profileName}>{user?.name || "Your profile"}</Text>
           <Text style={s.profileEmail}>{user?.email || ""}</Text>
-
-          {assessed ? (
-            <Badge label="Assessment complete" color={C.green} />
+          {assessed && profile ? (
+            <Badge label={ATTACHMENT_LABELS[profile.attachmentType] || "Assessed"} color={C.violet} />
           ) : (
             <Badge label="Assessment pending" color={C.gold} />
           )}
 
-          {/* Quick actions */}
           <View style={s.profileActions}>
-            <TouchableOpacity style={s.profileAction} onPress={onViewMatches}>
-              <Text style={s.profileActionIcon}>💕</Text>
-              <Text style={s.profileActionLabel}>Matches</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.profileAction} onPress={onViewReports}>
-              <Text style={s.profileActionIcon}>📊</Text>
-              <Text style={s.profileActionLabel}>My report</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.profileAction} onPress={onTakeAssessment}>
-              <Text style={s.profileActionIcon}>🧠</Text>
-              <Text style={s.profileActionLabel}>{assessed ? "Retake" : "Assess"}</Text>
-            </TouchableOpacity>
+            {[
+              { icon: "💕", label: "Matches",   fn: onMatches },
+              { icon: "📊", label: "My report", fn: onReports },
+              { icon: "🧠", label: assessed ? "Retake" : "Assess", fn: onAssess },
+            ].map(a => (
+              <TouchableOpacity key={a.label} style={s.profileAction} onPress={a.fn}>
+                <Text style={{ fontSize: 26 }}>{a.icon}</Text>
+                <Text style={s.profileActionLbl}>{a.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          {/* Dimensions */}
-          {assessed ? (
+          {assessed && dims.length > 0 ? (
             <View style={s.card}>
               <Text style={s.cardTitle}>Your psychological profile</Text>
-              {dims.map((d, i) => (
-                <DimBar key={i} label={d.label} score={d.score} color={d.color} />
-              ))}
+              {dims.map((d, i) => <DimBar key={i} label={d.label} score={d.score} color={d.color} />)}
             </View>
           ) : (
-            <View style={s.emptyAssess}>
-              <Text style={s.emptyAssessEmoji}>🧠</Text>
-              <Text style={s.emptyAssessTitle}>Take the assessment</Text>
-              <Text style={s.emptyAssessSub}>Answer 12 quick questions to see your psychological profile and unlock your matches.</Text>
-              <GradBtn label="Start assessment →" onPress={onTakeAssessment} style={{ marginTop: 16 }} />
+            <View style={s.emptyCard}>
+              <Text style={{ fontSize: 44 }}>🧠</Text>
+              <Text style={s.emptyTitle}>Take the assessment</Text>
+              <Text style={s.emptySub}>12 questions + 1 adaptive follow-up. Takes about 4 minutes. Unlocks your matches and full psychological report.</Text>
+              <GradBtn label="Start assessment →" onPress={onAssess} style={{ marginTop: 16 }} />
             </View>
           )}
         </ScrollView>
@@ -791,40 +892,50 @@ function ProfileScreen({ user, dims, onTakeAssessment, onViewReports, onViewMatc
   );
 }
 
-// ── 6. MATCH DISCOVERY SCREEN ─────────────────────────────────────────────────
-function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onOpenProfile, busy }) {
-  const list = matches.length ? matches : DEMO_MATCHES;
+// ── 6. DISCOVERY ───────────────────────────────────────────────────────────────
+function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onProfile, busy, userProfile }) {
+  const list = matches.length ? matches
+    : (userProfile ? getDemoMatches(userProfile, mode) : []);
   const isDemo = !matches.length;
+
+  const modeDesc = {
+    romance:    "Scored on attachment, vulnerability, love language & values",
+    friendship: "Scored on values, communication, growth mindset & openness",
+  };
 
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <View style={s.discHdr}>
-          <TouchableOpacity onPress={onOpenProfile}><Text style={s.discAvatar}>👤</Text></TouchableOpacity>
+          <TouchableOpacity onPress={onProfile} style={s.discAvatarBtn}>
+            <Text style={{ fontSize: 20 }}>👤</Text>
+          </TouchableOpacity>
           <Text style={s.wordmark}>✦ SoulMatch</Text>
-          <View style={{ width: 36 }} />
+          <View style={{ width: 40 }} />
         </View>
 
         {/* Mode toggle */}
-        <View style={s.modeRow}>
-          {["romance", "friendship"].map(m => (
-            <TouchableOpacity key={m} style={[s.modeBtn, mode === m && s.modeBtnActive]} onPress={() => onModeChange(m)}>
-              <Text style={[s.modeBtnText, mode === m && s.modeBtnTextActive]}>
-                {m === "romance" ? "💕 Romance" : "🤝 Friendship"}
-              </Text>
+        <View style={s.modePill}>
+          {[
+            { key: "romance",    label: "💕  Romance" },
+            { key: "friendship", label: "🤝  Friendship" },
+          ].map(m => (
+            <TouchableOpacity key={m.key} style={[s.modeBtn, mode === m.key && s.modeBtnActive]} onPress={() => onModeChange(m.key)}>
+              <Text style={[s.modeBtnTxt, mode === m.key && s.modeBtnTxtActive]}>{m.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
+        <Text style={s.modeSubtitle}>{modeDesc[mode]}</Text>
 
         {isDemo && (
-          <View style={s.demoNote}>
-            <Text style={s.demoNoteText}>✦ Demo mode — complete your assessment to see real matches</Text>
+          <View style={s.demoBanner}>
+            <Text style={s.demoBannerTxt}>✦ Demo matches — your actual matches unlock after completing the assessment</Text>
           </View>
         )}
 
         {busy ? (
-          <View style={s.centerFill}><Text style={s.loadingText}>Finding your matches…</Text></View>
+          <View style={s.centerFill}><Text style={s.muted}>Finding your matches…</Text></View>
         ) : (
           <FlatList
             data={list}
@@ -835,27 +946,27 @@ function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onOpenProfi
               <View style={s.matchCard}>
                 <View style={s.matchCardTop}>
                   <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.matchAvatar}>
-                    <Text style={s.matchAvatarText}>{m.avatar || m.name[0]}</Text>
+                    <Text style={s.matchAvatarTxt}>{m.avatar || m.name[0]}</Text>
                   </LinearGradient>
-                  <View style={s.matchInfo}>
+                  <View style={{ flex: 1 }}>
                     <Text style={s.matchName}>{m.name}</Text>
                     <Text style={s.matchCity}>📍 {m.city}</Text>
                   </View>
-                  <View style={s.matchScoreBadge}>
-                    <Text style={s.matchScoreNum}>{Math.round(m.score)}%</Text>
-                    <Text style={s.matchScoreLabel}>match</Text>
+                  <View style={s.scoreBadge}>
+                    <Text style={s.scoreNum}>{Math.round(m.score)}%</Text>
+                    <Text style={s.scoreLbl}>{mode === "romance" ? "romantic" : "friendship"}</Text>
                   </View>
                 </View>
-                <View style={s.matchHighlights}>
+                <View style={s.highlights}>
                   {(m.highlights || []).map((h, i) => (
                     <View key={i} style={s.highlightPill}>
-                      <Text style={s.highlightText}>✓ {h}</Text>
+                      <Text style={s.highlightTxt}>✓ {h}</Text>
                     </View>
                   ))}
                 </View>
                 <View style={s.matchActions}>
-                  <GhostBtn label="View profile" onPress={() => onViewMatch(m)} style={{ flex: 1 }} />
-                  <GradBtn label="Message →" onPress={() => onViewMatch(m)} style={{ flex: 1 }} />
+                  <GhostBtn label="View profile" onPress={() => onViewMatch(m, mode)} style={{ flex: 1 }} />
+                  <GradBtn  label="Message →"    onPress={() => onViewMatch(m, mode)} style={{ flex: 1 }} />
                 </View>
               </View>
             )}
@@ -866,46 +977,54 @@ function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onOpenProfi
   );
 }
 
-// ── 7. MATCH DETAIL SCREEN ────────────────────────────────────────────────────
-function MatchDetailScreen({ match: m, userDims, onBack, onChat }) {
+// ── 7. MATCH DETAIL ────────────────────────────────────────────────────────────
+function MatchDetailScreen({ match: m, userProfile, mode, onBack, onChat }) {
   if (!m) return null;
-  const dims = userDims || DIMENSIONS_DEMO;
+  const dims = userProfile?.dimensions || m.dimensions;
+
+  const modeColor = mode === "romance" ? C.pink : C.teal;
+  const modeLabel = mode === "romance" ? "Romantic compatibility" : "Friendship compatibility";
 
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title={m.name} subtitle={`📍 ${m.city}`} onBack={onBack} />
-        <ScrollView contentContainerStyle={s.detailContainer}>
-          {/* Hero */}
+        <ScrollView contentContainerStyle={s.detailScroll}>
           <View style={s.detailHero}>
             <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.detailAvatar}>
-              <Text style={s.detailAvatarText}>{m.avatar || m.name[0]}</Text>
+              <Text style={s.detailAvatarTxt}>{m.avatar || m.name[0]}</Text>
             </LinearGradient>
-            <View style={s.detailScoreRing}>
-              <Text style={s.detailScoreNum}>{Math.round(m.score)}%</Text>
-              <Text style={s.detailScoreLabel}>compatible</Text>
+            <View style={[s.detailScoreBox, { borderColor: modeColor + "44", backgroundColor: modeColor + "12" }]}>
+              <Text style={[s.detailScoreNum, { color: modeColor }]}>{Math.round(m.score)}%</Text>
+              <Text style={[s.detailScoreLbl, { color: modeColor }]}>{modeLabel}</Text>
             </View>
           </View>
 
-          {/* Highlights */}
+          {/* Attachment type badge for match */}
+          {m.attachmentType && (
+            <View style={{ alignItems: "center", marginBottom: 8 }}>
+              <Badge label={`Their style: ${ATTACHMENT_LABELS[m.attachmentType] || m.attachmentType}`} color={C.violet} />
+            </View>
+          )}
+
           <View style={s.card}>
-            <Text style={s.cardTitle}>Why you match</Text>
+            <Text style={s.cardTitle}>Why you {mode === "romance" ? "connect romantically" : "make great friends"}</Text>
             {(m.highlights || []).map((h, i) => (
               <View key={i} style={s.detailHighlight}>
-                <Text style={s.detailHighlightDot}>✦</Text>
-                <Text style={s.detailHighlightText}>{h}</Text>
+                <Text style={{ color: C.violet, fontSize: 14 }}>✦</Text>
+                <Text style={s.detailHighlightTxt}>{h}</Text>
               </View>
             ))}
           </View>
 
-          {/* Dimension breakdown */}
           <View style={s.card}>
             <Text style={s.cardTitle}>Compatibility breakdown</Text>
-            <Text style={s.cardSub}>Based on your combined psychological profiles</Text>
+            <Text style={s.cardSub}>Your combined psychological profiles</Text>
             {dims.map((d, i) => {
-              const shimmed = Math.min(100, Math.round(d.score * (0.8 + Math.sin(i * 1.7) * 0.15)));
-              return <DimBar key={i} label={d.label} score={shimmed} color={d.color} />;
+              const matchScore = m.dimensions?.[i]?.score ?? 70;
+              const compat = Math.round(100 - Math.abs(d.score - matchScore) * 0.8);
+              return <DimBar key={i} label={d.label} score={compat} color={d.color} />;
             })}
           </View>
 
@@ -917,13 +1036,13 @@ function MatchDetailScreen({ match: m, userDims, onBack, onChat }) {
   );
 }
 
-// ── 8. CHAT SCREEN ────────────────────────────────────────────────────────────
+// ── 8. CHAT ────────────────────────────────────────────────────────────────────
 function ChatScreen({ match: m, messages, onSend, onBack }) {
   const [text, setText] = useState("");
   const listRef = useRef(null);
-  const msgs = messages || [
-    { id: "0", text: "Hey! I saw we matched. Your compatibility breakdown was really interesting 🙂", from: "them", ts: "10:24" },
-    { id: "1", text: "The shared core values dimension especially — I don't often find that.", from: "them", ts: "10:25" },
+  const msgs = messages?.length ? messages : [
+    { id: "0", text: "Hey! I saw we matched. Your profile was really interesting to read through 🙂", from: "them", ts: "10:24" },
+    { id: "1", text: "The shared values dimension especially — I don't often find that so clearly.", from: "them", ts: "10:25" },
   ];
 
   function send() {
@@ -950,11 +1069,11 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
                 <View style={[s.msgWrap, mine ? s.msgWrapMine : s.msgWrapThem]}>
                   {mine ? (
                     <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.msgBubble}>
-                      <Text style={s.msgTextMine}>{msg.text}</Text>
+                      <Text style={s.msgTxtMine}>{msg.text}</Text>
                     </LinearGradient>
                   ) : (
                     <View style={[s.msgBubble, s.msgBubbleThem]}>
-                      <Text style={s.msgTextThem}>{msg.text}</Text>
+                      <Text style={s.msgTxtThem}>{msg.text}</Text>
                     </View>
                   )}
                   <Text style={s.msgTime}>{msg.ts}</Text>
@@ -962,9 +1081,9 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
               );
             }}
           />
-          <View style={s.chatInput}>
+          <View style={s.chatBar}>
             <TextInput
-              style={s.chatTextInput}
+              style={s.chatInput}
               placeholder="Type a message…"
               placeholderTextColor={C.muted}
               value={text}
@@ -974,7 +1093,7 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
               onSubmitEditing={send}
             />
             <TouchableOpacity onPress={send} disabled={!text.trim()}>
-              <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={[s.sendBtn, !text.trim() && { opacity: 0.45 }]}>
+              <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={[s.sendBtn, !text.trim() && { opacity: 0.4 }]}>
                 <Text style={s.sendIcon}>↑</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -985,62 +1104,72 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
   );
 }
 
-// ── 9. REPORTS SCREEN ─────────────────────────────────────────────────────────
+// ── 9. REPORTS ─────────────────────────────────────────────────────────────────
 const DIM_DESCRIPTIONS = [
-  "Describes how you seek connection and respond to perceived distance or rejection.",
-  "How well you manage your emotional responses under stress or conflict.",
-  "The fundamental beliefs and priorities that guide your choices and life decisions.",
-  "Your preferred style for expressing thoughts, needs, and feelings in relationships.",
-  "How you typically approach disagreements — avoidant, confrontational, or collaborative.",
-  "Your need for personal space, autonomy, and time apart within a relationship.",
-  "Your comfort with emotional openness and sharing personal struggles with others.",
-  "How much you need explicit confirmation that things are okay between you and a partner.",
-  "The primary ways you express and prefer to receive love and care.",
-  "Your belief that you and others can change, learn, and improve over time.",
-  "Your appetite for novel experiences, ideas, and diverse perspectives.",
-  "What you're ultimately hoping to build in a relationship — short-term or long-term.",
+  "How you seek and maintain emotional bonds — your comfort with closeness, distance, and perceived rejection.",
+  "How effectively you process and recover from emotional distress without damaging your relationships.",
+  "The fundamental beliefs and priorities that guide your choices in relationships and life.",
+  "Whether you tend to say things directly, reflect first, pick your battles, or stay quiet when bothered.",
+  "Your approach to disagreements — do you push through, cool down first, compromise fast, or withdraw?",
+  "Your need for personal space, autonomy, and time apart from people you're close to.",
+  "How naturally you can share emotional struggles, fears, and personal truths with others.",
+  "How much you need explicit reassurance that things are okay between you and someone you care about.",
+  "The primary way you express love and prefer to receive it from others.",
+  "Your belief in the capacity for people — including yourself — to change, grow, and improve.",
+  "Your appetite for new ideas, experiences, perspectives, and ways of doing things.",
+  "What you're ultimately hoping to build in a relationship, and on what timeline.",
 ];
 
-function ReportsScreen({ user, dims, assessed, onBack, onTakeAssessment }) {
-  const d = (dims && dims.length > 0) ? dims : DIMENSIONS_DEMO;
-  const avg = Math.round(d.reduce((a, x) => a + x.score, 0) / d.length);
+function ReportsScreen({ user, profile, assessed, onBack, onAssess }) {
+  const dims = profile?.dimensions || DIM_LABELS.map((label, i) => ({ label, score: 65, color: DIM_COLORS[i] }));
+  const avg  = Math.round(dims.reduce((a, d) => a + d.score, 0) / dims.length);
+  const at   = profile?.attachmentType || "secure";
 
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title="My Report" subtitle="Psychological profile" onBack={onBack} />
-        <ScrollView contentContainerStyle={s.reportContainer}>
+        <ScrollView contentContainerStyle={s.reportScroll}>
           {!assessed && (
-            <View style={s.reportDemoNote}>
-              <Text style={s.reportDemoText}>This is a sample report. Complete your assessment to see real scores.</Text>
-              <GradBtn label="Take assessment →" onPress={onTakeAssessment} style={{ marginTop: 12 }} />
+            <View style={s.reportDemoCard}>
+              <Text style={{ color: C.gold, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 }}>
+                This is a sample report. Complete the assessment to see your real psychological profile.
+              </Text>
+              <GradBtn label="Take assessment →" onPress={onAssess} style={{ marginTop: 12 }} />
             </View>
           )}
 
-          {/* Score summary */}
-          <LinearGradient colors={["#7B2FBE22", "#E040FB11"]} style={s.reportSummaryCard}>
-            <Text style={s.reportSummaryLabel}>Average compatibility score</Text>
-            <Text style={s.reportSummaryScore}>{avg}%</Text>
-            <Text style={s.reportSummaryName}>{user?.name || "Your"} profile</Text>
+          {/* Score hero */}
+          <LinearGradient colors={["#7B2FBE22", "#E040FB11"]} style={s.reportHero}>
+            <Text style={s.reportHeroScore}>{avg}%</Text>
+            <Text style={s.reportHeroLabel}>Average self-alignment score</Text>
+            <Text style={s.reportHeroName}>{user?.name || "Your"} profile</Text>
           </LinearGradient>
 
-          {/* Each dimension */}
-          {d.map((dim, i) => (
+          {/* Attachment type insight */}
+          <View style={s.card}>
+            <Text style={s.cardTitle}>Your attachment style</Text>
+            <Badge label={ATTACHMENT_LABELS[at]} color={C.violet} />
+            <Text style={[s.body, { marginTop: 8 }]}>{ATTACHMENT_INSIGHTS[at]}</Text>
+          </View>
+
+          {/* All 12 dimensions */}
+          {dims.map((d, i) => (
             <View key={i} style={s.reportDimCard}>
               <View style={s.reportDimHdr}>
-                <Text style={s.reportDimName}>{dim.label}</Text>
-                <Text style={[s.reportDimScore, { color: dim.color }]}>{dim.score}%</Text>
+                <Text style={s.reportDimName}>{d.label}</Text>
+                <Text style={[s.reportDimScore, { color: d.color }]}>{d.score}%</Text>
               </View>
-              <View style={s.dimBarBg}>
-                <View style={[s.dimBarFill, { width: `${dim.score}%`, backgroundColor: dim.color }]} />
-              </View>
+              <View style={s.dimBg}><View style={[s.dimFill, { width: `${d.score}%`, backgroundColor: d.color }]} /></View>
               <Text style={s.reportDimDesc}>{DIM_DESCRIPTIONS[i]}</Text>
             </View>
           ))}
 
-          <View style={s.reportDisclaimer}>
-            <Text style={s.reportDisclaimerText}>This report is for self-discovery and compatibility matching purposes only. It is not a medical or psychological diagnosis.</Text>
+          <View style={[s.card, { marginTop: 8 }]}>
+            <Text style={[s.muted, { textAlign: "center", fontSize: 12, lineHeight: 18 }]}>
+              This report is for self-discovery and compatibility matching purposes only — not a clinical or psychological diagnosis.
+            </Text>
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -1048,177 +1177,135 @@ function ReportsScreen({ user, dims, assessed, onBack, onTakeAssessment }) {
   );
 }
 
-// ── 10. SETTINGS SCREEN ───────────────────────────────────────────────────────
-function SettingsScreen({ user, onBack, onSignOut, onDeleteAccount }) {
+// ── 10. SETTINGS ───────────────────────────────────────────────────────────────
+function SettingsScreen({ user, onBack, onSignOut }) {
   const [notifs, setNotifs] = useState(true);
-
-  function Row({ label, value, onPress, danger }) {
-    return (
-      <TouchableOpacity style={s.settingsRow} onPress={onPress}>
-        <Text style={[s.settingsRowLabel, danger && { color: C.error }]}>{label}</Text>
-        {value ? <Text style={s.settingsRowValue}>{value}</Text> : <Text style={s.settingsRowArrow}>›</Text>}
-      </TouchableOpacity>
-    );
-  }
-
+  const SettingsRow = ({ label, value, onPress, danger }) => (
+    <TouchableOpacity style={s.settRow} onPress={onPress}>
+      <Text style={[s.settRowLbl, danger && { color: C.error }]}>{label}</Text>
+      {value ? <Text style={s.settRowVal}>{value}</Text> : <Text style={s.settRowArr}>›</Text>}
+    </TouchableOpacity>
+  );
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title="Settings" onBack={onBack} />
-        <ScrollView contentContainerStyle={s.settingsContainer}>
-
-          {/* Account */}
-          <Text style={s.settingsSection}>Account</Text>
+        <ScrollView contentContainerStyle={s.settScroll}>
+          <Text style={s.settSection}>Account</Text>
           <View style={s.card}>
-            <Row label="Name" value={user?.name || "—"} />
+            <SettingsRow label="Name"  value={user?.name  || "—"} />
             <View style={s.divider} />
-            <Row label="Email" value={user?.email || "—"} />
+            <SettingsRow label="Email" value={user?.email || "—"} />
             <View style={s.divider} />
-            <Row label="Edit profile" />
+            <SettingsRow label="Edit profile" />
           </View>
 
-          {/* Notifications */}
-          <Text style={s.settingsSection}>Notifications</Text>
+          <Text style={s.settSection}>Notifications</Text>
           <View style={s.card}>
-            <View style={s.settingsRow}>
-              <Text style={s.settingsRowLabel}>Match alerts</Text>
+            <View style={s.settRow}>
+              <Text style={s.settRowLbl}>Match alerts</Text>
               <Switch value={notifs} onValueChange={setNotifs} trackColor={{ true: C.violet }} thumbColor="#fff" />
             </View>
           </View>
 
-          {/* Subscription */}
-          <Text style={s.settingsSection}>Subscription</Text>
+          <Text style={s.settSection}>Subscription</Text>
           <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.subCard}>
-            <Text style={s.subCardTitle}>SoulMatch Premium</Text>
-            <Text style={s.subCardSub}>Unlimited matches · Full compatibility reports · Priority listing</Text>
-            <View style={s.subCardPrice}>
-              <Text style={s.subCardPriceNum}>$14.99</Text>
-              <Text style={s.subCardPricePer}>/month</Text>
+            <Text style={s.subTitle}>SoulMatch Premium</Text>
+            <Text style={s.subSub}>Unlimited matches · Full compatibility reports · Priority listing</Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, marginTop: 8 }}>
+              <Text style={s.subPrice}>$14.99</Text>
+              <Text style={s.subPer}>/month</Text>
             </View>
-            <TouchableOpacity style={s.subCardBtn}>
-              <Text style={s.subCardBtnText}>Upgrade to Premium</Text>
+            <TouchableOpacity style={s.subBtn}>
+              <Text style={s.subBtnTxt}>Upgrade to Premium</Text>
             </TouchableOpacity>
           </LinearGradient>
-          <View style={s.card}>
-            <Row label="Current plan" value="Beta (Free)" />
-          </View>
+          <View style={s.card}><SettingsRow label="Current plan" value="Beta (Free)" /></View>
 
-          {/* Legal */}
-          <Text style={s.settingsSection}>Legal & privacy</Text>
+          <Text style={s.settSection}>Legal & privacy</Text>
           <View style={s.card}>
-            <Row label="Privacy Policy" />
+            <SettingsRow label="Privacy Policy" />
             <View style={s.divider} />
-            <Row label="Terms of Service" />
+            <SettingsRow label="Terms of Service" />
             <View style={s.divider} />
-            <Row label="Delete my data" />
+            <SettingsRow label="Delete my data" />
           </View>
-
-          {/* Sign out */}
           <View style={s.card}>
-            <Row label="Sign out" danger onPress={onSignOut} />
+            <SettingsRow label="Sign out" danger onPress={onSignOut} />
           </View>
-
-          <TouchableOpacity style={s.deleteBtn} onPress={onDeleteAccount}>
-            <Text style={s.deleteBtnText}>Delete account permanently</Text>
-          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
 }
 
-// ── ROOT APP ──────────────────────────────────────────────────────────────────
+// ── ROOT APP ───────────────────────────────────────────────────────────────────
 export default function App() {
   const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_600SemiBold });
-
-  // Navigation
-  const [screen, setScreen] = useState("splash");
-  const [navParam, setNavParam] = useState(null);
-  function navigate(s, param = null) { setNavParam(param); setScreen(s); }
-
-  // Auth & user state
-  const [user, setUser] = useState(null); // { id, name, email }
-  const [authToken, setAuthToken] = useState("");
-  const [refreshToken, setRefreshToken] = useState("");
-
-  // App state
-  const [busy, setBusy] = useState(false);
-  const [authError, setAuthError] = useState("");
-  const [mode, setMode] = useState("romance");
-  const [matches, setMatches] = useState([]);
-  const [messages, setMessages] = useState({});
-  const [assessed, setAssessed] = useState(false);
-  const [userDims, setUserDims] = useState(null);
+  const [screen, setScreen]       = useState("splash");
+  const [navParam, setNavParam]   = useState(null);
+  const [user, setUser]           = useState(null);
+  const [authToken, setToken]     = useState("");
+  const [busy, setBusy]           = useState(false);
+  const [authError, setAuthErr]   = useState("");
+  const [mode, setMode]           = useState("romance");
+  const [matches, setMatches]     = useState([]);
+  const [messages, setMessages]   = useState({});
+  const [profile, setProfile]     = useState(null);
+  const [assessed, setAssessed]   = useState(false);
 
   if (!fontsLoaded) return null;
 
-  // ── API HELPERS ──────────────────────────────────────────────────────────
-  async function withAuth(fn) {
-    let token = authToken;
-    return fn(token);
-  }
+  function nav(s, p = null) { setNavParam(p); setScreen(s); }
 
   async function login(email, password) {
-    setBusy(true); setAuthError("");
+    setBusy(true); setAuthErr("");
     try {
       const res = await apiRequest("POST", "/auth/login", { email, password }, null);
-      if (!res.ok) { setAuthError(normalizeError(res.body, "Login failed")); return; }
-      const body = res.body;
-      setAuthToken(body.access_token);
-      setRefreshToken(body.refresh_token);
-      setUser({ id: body.user_id, name: body.name || email.split("@")[0], email });
-      navigate("profile");
-    } catch (e) {
-      setAuthError(normalizeError(e, "Network error. Check your connection."));
-    } finally { setBusy(false); }
+      if (!res.ok) { setAuthErr(normalizeError(res.body, "Login failed")); return; }
+      setToken(res.body.access_token);
+      setUser({ id: res.body.user_id, name: res.body.name || email.split("@")[0], email });
+      nav("profile");
+    } catch (e) { setAuthErr(normalizeError(e, "Network error")); }
+    finally { setBusy(false); }
   }
 
   async function register(data) {
-    setBusy(true); setAuthError("");
-    const { name, email, password, birthDate, birthTime, selectedPlace, goals, preference, consentP, consentS } = data;
+    setBusy(true); setAuthErr("");
+    const { name, email, password, birthDate, birthTime, selectedPlace, goals, pref, consentP, consentS } = data;
     try {
       let auth;
-      const signupRes = await apiRequest("POST", "/auth/signup", { email, password, birth_date: birthDate }, null);
-      if (signupRes.ok) {
-        auth = signupRes.body;
-      } else if (signupRes.status === 409) {
-        const loginRes = await apiRequest("POST", "/auth/login", { email, password }, null);
-        if (!loginRes.ok) { setAuthError(normalizeError(loginRes.body, "Login failed")); return; }
-        auth = loginRes.body;
-      } else {
-        setAuthError(normalizeError(signupRes.body, "Registration failed")); return;
-      }
+      const r = await apiRequest("POST", "/auth/signup", { email, password, birth_date: birthDate }, null);
+      if (r.ok) { auth = r.body; }
+      else if (r.status === 409) {
+        const l = await apiRequest("POST", "/auth/login", { email, password }, null);
+        if (!l.ok) { setAuthErr(normalizeError(l.body, "Login failed")); return; }
+        auth = l.body;
+      } else { setAuthErr(normalizeError(r.body, "Registration failed")); return; }
 
-      setAuthToken(auth.access_token);
-      setRefreshToken(auth.refresh_token);
-      const uid = auth.user_id;
-
+      setToken(auth.access_token);
       await apiRequest("POST", "/legal/consent", { accept: true }, auth.access_token);
-
-      const profilePayload = {
-        id: uid, name, email,
-        birth: {
-          date: birthDate, time: birthTime,
-          place: selectedPlace?.label || "",
-          latitude: selectedPlace?.latitude || 0,
-          longitude: selectedPlace?.longitude || 0,
-          timezone: selectedPlace?.timezone || "",
-        },
-        goals, matching_preference: preference,
-        consent_privacy: consentP, consent_sensitive_data: consentS,
-        policy_version: "v1",
-      };
-      await apiRequest("POST", "/users", profilePayload, auth.access_token);
-      if (preference === "psych_behavior_astro") {
-        await apiRequest("POST", "/vectors/generate", { user_id: uid }, auth.access_token);
+      await apiRequest("POST", "/users", {
+        id: auth.user_id, name, email,
+        birth: { date: birthDate, time: birthTime, place: selectedPlace?.label || "", latitude: selectedPlace?.latitude || 0, longitude: selectedPlace?.longitude || 0, timezone: selectedPlace?.timezone || "" },
+        goals, matching_preference: pref, consent_privacy: consentP, consent_sensitive_data: consentS, policy_version: "v1",
+      }, auth.access_token);
+      if (pref === "psych_behavior_astro") {
+        await apiRequest("POST", "/vectors/generate", { user_id: auth.user_id }, auth.access_token);
       }
+      setUser({ id: auth.user_id, name, email });
+      nav("assessment");
+    } catch (e) { setAuthErr(normalizeError(e, "Registration failed")); }
+    finally { setBusy(false); }
+  }
 
-      setUser({ id: uid, name, email });
-      navigate("assessment");
-    } catch (e) {
-      setAuthError(normalizeError(e, "Registration failed. Check your connection."));
-    } finally { setBusy(false); }
+  function handleAssessmentDone(answers, adaptiveAns) {
+    const computed = computeProfile(answers, adaptiveAns);
+    setProfile(computed);
+    setAssessed(true);
+    // In production: POST answers to /psychology/session
+    nav("discovery");
   }
 
   async function loadMatches(m = mode) {
@@ -1227,350 +1314,239 @@ export default function App() {
     try {
       const res = await apiRequest("POST", "/matches", { user_id: user.id, mode: m }, authToken);
       if (res.ok) {
-        const ranked = (res.body?.results || []).map(r => ({
-          id: r.candidate_id,
-          name: r.candidate_name || r.candidate_id,
-          city: r.candidate_city || "Toronto, ON",
-          score: r.score,
-          avatar: (r.candidate_name || "?")[0].toUpperCase(),
-          highlights: r.highlights || [],
-        }));
-        setMatches(ranked);
+        setMatches((res.body?.results || []).map(r => ({
+          id: r.candidate_id, name: r.candidate_name || r.candidate_id,
+          city: r.candidate_city || "Toronto, ON", score: r.score,
+          avatar: (r.candidate_name || "?")[0].toUpperCase(), highlights: r.highlights || [],
+        })));
       } else { setMatches([]); }
     } catch (_) { setMatches([]); }
     finally { setBusy(false); }
   }
 
   function sendMessage(matchId, text) {
-    const now = new Date();
-    const ts = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
-    const msg = { id: String(Date.now()), text, from: "me", ts };
-    setMessages(prev => ({
-      ...prev,
-      [matchId]: [...(prev[matchId] || []), msg],
-    }));
+    const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setMessages(prev => ({ ...prev, [matchId]: [...(prev[matchId] || []), { id: String(Date.now()), text, from: "me", ts }] }));
   }
 
   function signOut() {
-    setUser(null); setAuthToken(""); setRefreshToken(""); setMatches([]);
-    setAssessed(false); setUserDims(null); navigate("login");
+    setUser(null); setToken(""); setMatches([]); setProfile(null); setAssessed(false);
+    nav("login");
   }
 
-  function handleAssessmentComplete(answers) {
-    setAssessed(true);
-    setUserDims(DIMENSIONS_DEMO); // In production: compute from answers + POST to /psychology/session
-    navigate("discovery");
-    loadMatches();
-  }
-
-  // ── SCREEN RENDERING ─────────────────────────────────────────────────────
-  if (screen === "splash") return <SplashScreen onDone={() => navigate("login")} />;
-
-  if (screen === "login") return (
-    <LoginScreen
-      onLogin={login}
-      onGoRegister={() => { setAuthError(""); navigate("register"); }}
-      error={authError}
-      busy={busy}
-    />
-  );
-
-  if (screen === "register") return (
-    <RegisterScreen
-      onComplete={register}
-      onGoLogin={() => { setAuthError(""); navigate("login"); }}
-      error={authError}
-      busy={busy}
-    />
-  );
-
-  if (screen === "assessment") return (
-    <AssessmentScreen
-      onComplete={handleAssessmentComplete}
-      onSkip={() => { setAssessed(false); navigate("profile"); }}
-    />
-  );
-
-  if (screen === "profile") return (
-    <ProfileScreen
-      user={user}
-      dims={userDims || DIMENSIONS_DEMO}
-      onTakeAssessment={() => navigate("assessment")}
-      onViewReports={() => navigate("reports")}
-      onViewMatches={() => { navigate("discovery"); loadMatches(); }}
-      onOpenSettings={() => navigate("settings")}
-    />
-  );
-
-  if (screen === "discovery") return (
-    <DiscoveryScreen
-      matches={matches}
-      mode={mode}
-      onModeChange={m => { setMode(m); loadMatches(m); }}
-      onViewMatch={m => navigate("match_detail", m)}
-      onOpenProfile={() => navigate("profile")}
-      busy={busy}
-    />
-  );
-
-  if (screen === "match_detail") return (
-    <MatchDetailScreen
-      match={navParam}
-      userDims={userDims || DIMENSIONS_DEMO}
-      onBack={() => navigate("discovery")}
-      onChat={m => navigate("chat", m)}
-    />
-  );
-
-  if (screen === "chat") return (
-    <ChatScreen
-      match={navParam}
-      messages={messages[navParam?.id]}
-      onSend={sendMessage}
-      onBack={() => navigate("match_detail", navParam)}
-    />
-  );
-
-  if (screen === "reports") return (
-    <ReportsScreen
-      user={user}
-      dims={userDims}
-      assessed={assessed}
-      onBack={() => navigate("profile")}
-      onTakeAssessment={() => navigate("assessment")}
-    />
-  );
-
-  if (screen === "settings") return (
-    <SettingsScreen
-      user={user}
-      onBack={() => navigate("profile")}
-      onSignOut={signOut}
-      onDeleteAccount={() => {}}
-    />
-  );
-
+  if (screen === "splash")    return <SplashScreen onDone={() => nav("login")} />;
+  if (screen === "login")     return <LoginScreen onLogin={login} onGoRegister={() => { setAuthErr(""); nav("register"); }} error={authError} busy={busy} />;
+  if (screen === "register")  return <RegisterScreen onComplete={register} onGoLogin={() => { setAuthErr(""); nav("login"); }} error={authError} busy={busy} />;
+  if (screen === "assessment") return <AssessmentScreen onComplete={handleAssessmentDone} onSkip={() => nav("profile")} />;
+  if (screen === "profile")   return <ProfileScreen user={user} profile={profile} assessed={assessed} onAssess={() => nav("assessment")} onReports={() => nav("reports")} onMatches={() => { nav("discovery"); loadMatches(); }} onSettings={() => nav("settings")} />;
+  if (screen === "discovery") return <DiscoveryScreen matches={matches} mode={mode} onModeChange={m => { setMode(m); loadMatches(m); }} onViewMatch={(m, md) => nav("match_detail", { match: m, mode: md || mode })} onProfile={() => nav("profile")} busy={busy} userProfile={profile} />;
+  if (screen === "match_detail") return <MatchDetailScreen match={navParam?.match} userProfile={profile} mode={navParam?.mode || mode} onBack={() => nav("discovery")} onChat={m => nav("chat", m)} />;
+  if (screen === "chat")      return <ChatScreen match={navParam} messages={messages[navParam?.id]} onSend={sendMessage} onBack={() => nav("match_detail", { match: navParam, mode })} />;
+  if (screen === "reports")   return <ReportsScreen user={user} profile={profile} assessed={assessed} onBack={() => nav("profile")} onAssess={() => nav("assessment")} />;
+  if (screen === "settings")  return <SettingsScreen user={user} onBack={() => nav("profile")} onSignOut={signOut} />;
   return null;
 }
 
-// ── STYLES ────────────────────────────────────────────────────────────────────
+// ── STYLES ─────────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
   fill: { flex: 1 },
   centerFill: { flex: 1, alignItems: "center", justifyContent: "center" },
 
-  // ── Splash
+  // Splash
   splashCenter: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 },
-  splashLogo: { marginBottom: 24 },
-  splashLogoGrad: { width: 80, height: 80, borderRadius: 24, alignItems: "center", justifyContent: "center" },
-  splashLogoIcon: { color: "#fff", fontSize: 40, fontWeight: "700" },
-  splashWordmark: { color: C.text, fontSize: 36, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -1, marginBottom: 16 },
+  splashLogoBox: { width: 80, height: 80, borderRadius: 24, alignItems: "center", justifyContent: "center", marginBottom: 24 },
+  splashLogoIcon: { color: "#fff", fontSize: 40, fontFamily: "SpaceGrotesk_600SemiBold" },
+  splashWordmark: { color: C.text, fontSize: 36, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -1, marginBottom: 14 },
   splashTagline: { color: C.muted, fontSize: 18, textAlign: "center", lineHeight: 28, fontFamily: "SpaceGrotesk_400Regular" },
-  splashFooter: { flexDirection: "row", gap: 8, justifyContent: "center", paddingBottom: 60 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.purple },
+  splashDots: { flexDirection: "row", gap: 8, justifyContent: "center", paddingBottom: 60 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
 
-  // ── Auth
-  authContainer: { padding: 24, paddingTop: 20, gap: 16 },
+  // Auth
+  authScroll: { padding: 24, paddingTop: 20, gap: 16 },
   authTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
   authTitle: { color: C.text, fontSize: 30, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.5 },
   authSub: { color: C.muted, fontSize: 16, fontFamily: "SpaceGrotesk_400Regular", marginBottom: 4 },
-  formCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 20, gap: 14 },
-  formNote: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 20 },
-  inputWrap: { gap: 6 },
-  inputLabel: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.8, textTransform: "uppercase" },
-  input: { backgroundColor: C.bg2, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular" },
   forgotLink: { color: C.violet, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", textAlign: "right" },
-  switchLink: { alignItems: "center", paddingVertical: 8 },
-  switchLinkText: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
+  switchLink: { alignItems: "center", paddingVertical: 10 },
+  switchLinkTxt: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
+  btnRow: { flexDirection: "row", gap: 10 },
+
+  // Form
+  formCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 20, gap: 12 },
+  formNote: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 20 },
+  inputLabel: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.8, textTransform: "uppercase" },
+  input: { backgroundColor: C.bg2, borderWidth: 1, borderColor: C.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular" },
   searchRow: { flexDirection: "row", gap: 8, alignItems: "center" },
   searchBtn: { backgroundColor: C.teal, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12 },
-  searchBtnText: { color: C.bg, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
-  placeCard: { backgroundColor: C.bg2, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, gap: 4 },
+  searchBtnTxt: { color: C.bg, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
+  placeCard: { backgroundColor: C.bg2, borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 12, gap: 3 },
   placeCardSel: { borderColor: C.violet },
   placeLabel: { color: C.text, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
-  placeMeta: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" },
-  selectedPlaceBox: { backgroundColor: "rgba(157,78,221,0.12)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
-  selectedPlaceText: { color: C.violet, fontSize: 13, fontFamily: "SpaceGrotesk_600SemiBold" },
+  placeMeta: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular" },
+  selPlaceBox: { backgroundColor: "rgba(157,78,221,0.1)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
+  selPlaceTxt: { color: C.violet, fontSize: 13, fontFamily: "SpaceGrotesk_600SemiBold" },
   toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
-  toggleLabel: { flex: 1, gap: 2 },
   prefCard: { backgroundColor: C.bg2, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 14, flexDirection: "row", alignItems: "flex-start", gap: 12 },
   prefCardSel: { borderColor: C.violet, backgroundColor: "rgba(157,78,221,0.08)" },
   prefDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.border, marginTop: 2 },
   prefDotSel: { borderColor: C.violet, backgroundColor: C.violet },
   prefTitle: { color: C.text, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
   prefSub: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular", marginTop: 2 },
-  btnRow: { flexDirection: "row", gap: 10 },
 
-  // ── Step dots
-  stepDots: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 8 },
+  // Step dots
+  stepDots: { flexDirection: "row", alignItems: "center", justifyContent: "center", marginBottom: 10 },
   stepDotWrap: { flexDirection: "row", alignItems: "center" },
   stepDot: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: C.border, alignItems: "center", justifyContent: "center", backgroundColor: C.bg3 },
   stepDotActive: { borderColor: C.violet, backgroundColor: C.violet },
-  stepDotCurrent: { borderColor: C.pink, backgroundColor: C.purple },
+  stepDotCur: { borderColor: C.pink, backgroundColor: C.purple },
   stepDotNum: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold" },
-  stepLine: { width: 28, height: 2, backgroundColor: C.border },
+  stepLine: { width: 24, height: 2, backgroundColor: C.border },
   stepLineActive: { backgroundColor: C.violet },
   stepLabel: { color: C.text, fontSize: 22, fontFamily: "SpaceGrotesk_600SemiBold", textAlign: "center", letterSpacing: -0.3, marginBottom: 4 },
 
-  // ── Assessment
+  // Assessment
   assessHdr: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  skipText: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
-  assessCount: { color: C.text, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
+  skipTxt: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
+  assessCount: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
   progressBg: { height: 4, backgroundColor: C.bg3, marginHorizontal: 20, borderRadius: 4 },
   progressFill: { height: 4, borderRadius: 4, backgroundColor: C.violet },
-  assessBody: { padding: 24, paddingTop: 28, gap: 20 },
-  dimBadge: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(157,78,221,0.12)", borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
+  assessBody: { padding: 24, paddingTop: 24, gap: 20 },
+  adaptiveBanner: { backgroundColor: "rgba(0,201,200,0.08)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(0,201,200,0.2)", marginBottom: 4 },
+  adaptiveBannerTxt: { color: C.teal, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
+  dimBadge: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(157,78,221,0.1)", borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
   dimBadgeEmoji: { fontSize: 16 },
-  dimBadgeLabel: { color: C.violet, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.5 },
-  assessQuestion: { color: C.text, fontSize: 22, fontFamily: "SpaceGrotesk_600SemiBold", lineHeight: 30, letterSpacing: -0.3 },
+  dimBadgeLbl: { color: C.violet, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
+  assessQ: { color: C.text, fontSize: 22, fontFamily: "SpaceGrotesk_600SemiBold", lineHeight: 30, letterSpacing: -0.3 },
   options: { gap: 12 },
-  optionCard: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 14 },
-  optionCardSel: { borderColor: C.violet, backgroundColor: "rgba(157,78,221,0.1)" },
-  optionDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.border, alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  optionDotSel: { borderColor: C.violet, backgroundColor: C.violet },
-  optionCheck: { color: "#fff", fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
-  optionText: { color: C.muted, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", flex: 1, lineHeight: 22 },
-  optionTextSel: { color: C.text },
+  optCard: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 14 },
+  optCardSel: { borderColor: C.violet, backgroundColor: "rgba(157,78,221,0.1)" },
+  optDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.border, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  optDotSel: { borderColor: C.violet, backgroundColor: C.violet },
+  optCheck: { color: "#fff", fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
+  optTxt: { color: C.muted, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", flex: 1, lineHeight: 22 },
+  optTxtSel: { color: C.text },
   assessFooter: { flexDirection: "row", gap: 10, padding: 20, paddingBottom: 32 },
 
-  // ── Profile
-  profileContainer: { padding: 20, gap: 20 },
+  // Profile
+  profileScroll: { padding: 20, gap: 20 },
   profileHdr: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  settingsIcon: { fontSize: 20 },
   avatarWrap: { alignItems: "center", marginTop: 8 },
   avatar: { width: 96, height: 96, borderRadius: 48, alignItems: "center", justifyContent: "center" },
-  avatarText: { color: "#fff", fontSize: 34, fontFamily: "SpaceGrotesk_600SemiBold" },
+  avatarTxt: { color: "#fff", fontSize: 34, fontFamily: "SpaceGrotesk_600SemiBold" },
   avatarBadge: { position: "absolute", bottom: 0, right: W / 2 - 76, backgroundColor: C.bg, borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4, borderWidth: 2, borderColor: C.green },
-  avatarBadgeText: { color: C.green, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
+  avatarBadgeTxt: { color: C.green, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
   profileName: { color: C.text, fontSize: 24, fontFamily: "SpaceGrotesk_600SemiBold", textAlign: "center", letterSpacing: -0.3 },
   profileEmail: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
   profileActions: { flexDirection: "row", gap: 12, justifyContent: "center" },
   profileAction: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, alignItems: "center", minWidth: 90 },
-  profileActionIcon: { fontSize: 24, marginBottom: 6 },
-  profileActionLabel: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
-  emptyAssess: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 28, alignItems: "center" },
-  emptyAssessEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyAssessTitle: { color: C.text, fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold", marginBottom: 8 },
-  emptyAssessSub: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", lineHeight: 22 },
+  profileActionLbl: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold", marginTop: 6 },
+  emptyCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 28, alignItems: "center", gap: 10 },
+  emptyTitle: { color: C.text, fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold" },
+  emptySub: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", lineHeight: 22 },
 
-  // ── Shared card
-  card: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 20, gap: 14 },
-  cardTitle: { color: C.text, fontSize: 16, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.2 },
-  cardSub: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", marginTop: -6 },
-  divider: { height: 1, backgroundColor: C.border },
-
-  // ── Dim bar
-  dimRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  dimLabel: { width: 160, color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" },
-  dimBarBg: { flex: 1, height: 6, backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 6, overflow: "hidden" },
-  dimBarFill: { height: 6, borderRadius: 6 },
-  dimScore: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", width: 32, textAlign: "right" },
-
-  // ── Discovery
-  discHdr: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
-  discAvatar: { fontSize: 24 },
-  modeRow: { flexDirection: "row", margin: 16, marginTop: 8, backgroundColor: C.bg3, borderRadius: 50, padding: 4, borderWidth: 1, borderColor: C.border },
+  // Discovery
+  discHdr: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 6 },
+  discAvatarBtn: { width: 38, height: 38, alignItems: "center", justifyContent: "center" },
+  modePill: { flexDirection: "row", margin: 16, marginTop: 8, marginBottom: 4, backgroundColor: C.bg3, borderRadius: 50, padding: 4, borderWidth: 1, borderColor: C.border },
   modeBtn: { flex: 1, paddingVertical: 10, borderRadius: 50, alignItems: "center" },
   modeBtnActive: { backgroundColor: C.purple },
-  modeBtnText: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
-  modeBtnTextActive: { color: "#fff" },
-  demoNote: { marginHorizontal: 16, backgroundColor: "rgba(157,78,221,0.08)", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.2)", marginBottom: 8 },
-  demoNoteText: { color: C.violet, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
+  modeBtnTxt: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
+  modeBtnTxtActive: { color: "#fff" },
+  modeSubtitle: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", marginHorizontal: 20, marginBottom: 8 },
+  demoBanner: { marginHorizontal: 16, backgroundColor: "rgba(157,78,221,0.08)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.2)", marginBottom: 6 },
+  demoBannerTxt: { color: C.violet, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
   matchList: { padding: 16, gap: 14 },
   matchCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 14 },
   matchCardTop: { flexDirection: "row", alignItems: "center", gap: 14 },
   matchAvatar: { width: 52, height: 52, borderRadius: 26, alignItems: "center", justifyContent: "center" },
-  matchAvatarText: { color: "#fff", fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold" },
-  matchInfo: { flex: 1 },
+  matchAvatarTxt: { color: "#fff", fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold" },
   matchName: { color: C.text, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
   matchCity: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
-  matchScoreBadge: { alignItems: "center", backgroundColor: "rgba(157,78,221,0.12)", borderRadius: 12, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.25)" },
-  matchScoreNum: { color: C.violet, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
-  matchScoreLabel: { color: C.muted, fontSize: 10, fontFamily: "SpaceGrotesk_400Regular" },
-  matchHighlights: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  highlightPill: { backgroundColor: "rgba(0,201,200,0.08)", borderRadius: 50, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(0,201,200,0.2)" },
-  highlightText: { color: C.teal, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" },
   matchActions: { flexDirection: "row", gap: 10 },
-  loadingText: { color: C.muted, fontFamily: "SpaceGrotesk_400Regular", fontSize: 16 },
+  scoreBadge: { alignItems: "center", backgroundColor: "rgba(157,78,221,0.12)", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.25)" },
+  scoreNum: { color: C.violet, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
+  scoreLbl: { color: C.muted, fontSize: 9, fontFamily: "SpaceGrotesk_400Regular", textTransform: "uppercase", letterSpacing: 0.5 },
+  highlights: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  highlightPill: { backgroundColor: "rgba(0,201,200,0.08)", borderRadius: 50, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(0,201,200,0.2)" },
+  highlightTxt: { color: C.teal, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" },
 
-  // ── Match Detail
-  detailContainer: { padding: 20, gap: 20 },
+  // Match detail
+  detailScroll: { padding: 20, gap: 20 },
   detailHero: { alignItems: "center", gap: 16, paddingVertical: 8 },
   detailAvatar: { width: 100, height: 100, borderRadius: 50, alignItems: "center", justifyContent: "center" },
-  detailAvatarText: { color: "#fff", fontSize: 36, fontFamily: "SpaceGrotesk_600SemiBold" },
-  detailScoreRing: { alignItems: "center", backgroundColor: "rgba(157,78,221,0.12)", borderRadius: 20, paddingHorizontal: 24, paddingVertical: 12, borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
-  detailScoreNum: { color: C.violet, fontSize: 36, fontFamily: "SpaceGrotesk_600SemiBold" },
-  detailScoreLabel: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
+  detailAvatarTxt: { color: "#fff", fontSize: 36, fontFamily: "SpaceGrotesk_600SemiBold" },
+  detailScoreBox: { borderRadius: 20, paddingHorizontal: 28, paddingVertical: 14, borderWidth: 1, alignItems: "center" },
+  detailScoreNum: { fontSize: 38, fontFamily: "SpaceGrotesk_600SemiBold" },
+  detailScoreLbl: { fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
   detailHighlight: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
-  detailHighlightDot: { color: C.violet, fontSize: 14, marginTop: 2 },
-  detailHighlightText: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", flex: 1, lineHeight: 22 },
+  detailHighlightTxt: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", flex: 1, lineHeight: 22 },
 
-  // ── Chat
-  chatList: { padding: 16, gap: 8 },
+  // Chat
+  chatList: { padding: 16, gap: 8, paddingBottom: 24 },
   msgWrap: { maxWidth: "80%", gap: 4 },
   msgWrapMine: { alignSelf: "flex-end", alignItems: "flex-end" },
   msgWrapThem: { alignSelf: "flex-start", alignItems: "flex-start" },
   msgBubble: { borderRadius: 18, padding: 14 },
   msgBubbleThem: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border },
-  msgTextMine: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
-  msgTextThem: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
+  msgTxtMine: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
+  msgTxtThem: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
   msgTime: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular", paddingHorizontal: 4 },
-  chatInput: { flexDirection: "row", alignItems: "flex-end", gap: 10, padding: 16, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg2 },
-  chatTextInput: { flex: 1, backgroundColor: C.bg3, borderRadius: 22, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 12, color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", maxHeight: 100 },
+  chatBar: { flexDirection: "row", alignItems: "flex-end", gap: 10, padding: 14, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg2 },
+  chatInput: { flex: 1, backgroundColor: C.bg3, borderRadius: 22, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 12, color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", maxHeight: 100 },
   sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
   sendIcon: { color: "#fff", fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
 
-  // ── Reports
-  reportContainer: { padding: 20, gap: 16 },
-  reportDemoNote: { backgroundColor: "rgba(255,215,0,0.06)", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "rgba(255,215,0,0.2)" },
-  reportDemoText: { color: C.gold, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
-  reportSummaryCard: { borderRadius: 20, padding: 24, alignItems: "center", gap: 6, borderWidth: 1, borderColor: "rgba(224,64,251,0.2)" },
-  reportSummaryLabel: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.8, textTransform: "uppercase" },
-  reportSummaryScore: { color: C.text, fontSize: 52, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -2 },
-  reportSummaryName: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
+  // Reports
+  reportScroll: { padding: 20, gap: 16 },
+  reportDemoCard: { backgroundColor: "rgba(255,215,0,0.06)", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "rgba(255,215,0,0.2)" },
+  reportHero: { borderRadius: 20, padding: 28, alignItems: "center", gap: 6, borderWidth: 1, borderColor: "rgba(224,64,251,0.2)" },
+  reportHeroScore: { color: C.text, fontSize: 54, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -2 },
+  reportHeroLabel: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.5, textTransform: "uppercase" },
+  reportHeroName: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
   reportDimCard: { backgroundColor: C.bg3, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, gap: 10 },
   reportDimHdr: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   reportDimName: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
   reportDimScore: { fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
   reportDimDesc: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 20 },
-  reportDisclaimer: { backgroundColor: C.bg3, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: C.border },
-  reportDisclaimerText: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 18, textAlign: "center" },
 
-  // ── Settings
-  settingsContainer: { padding: 20, gap: 8 },
-  settingsSection: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 1, textTransform: "uppercase", marginTop: 12, marginBottom: 4, paddingLeft: 4 },
-  settingsRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14 },
-  settingsRowLabel: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular" },
-  settingsRowValue: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
-  settingsRowArrow: { color: C.muted, fontSize: 20 },
-  subCard: { borderRadius: 20, padding: 24, gap: 10 },
-  subCardTitle: { color: "#fff", fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold" },
-  subCardSub: { color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 20 },
-  subCardPrice: { flexDirection: "row", alignItems: "flex-end", gap: 4 },
-  subCardPriceNum: { color: "#fff", fontSize: 32, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -1 },
-  subCardPricePer: { color: "rgba(255,255,255,0.6)", fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", paddingBottom: 6 },
-  subCardBtn: { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 50, paddingVertical: 12, alignItems: "center", marginTop: 4 },
-  subCardBtnText: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
-  deleteBtn: { alignItems: "center", paddingVertical: 16 },
-  deleteBtnText: { color: C.error, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
+  // Settings
+  settScroll: { padding: 20, gap: 8 },
+  settSection: { color: C.muted, fontSize: 10, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 1.2, textTransform: "uppercase", marginTop: 12, marginBottom: 4, paddingLeft: 4 },
+  settRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14 },
+  settRowLbl: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular" },
+  settRowVal: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
+  settRowArr: { color: C.muted, fontSize: 20 },
+  subCard: { borderRadius: 20, padding: 24, gap: 6 },
+  subTitle: { color: "#fff", fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold" },
+  subSub: { color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 20 },
+  subPrice: { color: "#fff", fontSize: 32, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -1 },
+  subPer: { color: "rgba(255,255,255,0.6)", fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", paddingBottom: 5 },
+  subBtn: { backgroundColor: "rgba(255,255,255,0.15)", borderRadius: 50, paddingVertical: 12, alignItems: "center", marginTop: 6 },
+  subBtnTxt: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
 
-  // ── Screen header
-  screenHdr: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 16 },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" },
-  backIcon: { color: C.text, fontSize: 18, marginLeft: -2 },
-  screenTitle: { color: C.text, fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.3 },
-  screenSub: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
-
-  // ── Common
+  // Shared
   wordmark: { color: C.text, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
   badge: { alignSelf: "flex-start", borderRadius: 50, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1 },
-  badgeText: { fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.6, textTransform: "uppercase" },
+  badgeTxt: { fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.6, textTransform: "uppercase" },
+  card: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 20, gap: 14 },
+  cardTitle: { color: C.text, fontSize: 16, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.2 },
+  cardSub: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", marginTop: -6 },
+  divider: { height: 1, backgroundColor: C.border },
+  dimRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  dimLabel: { width: 150, color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" },
+  dimBg: { flex: 1, height: 6, backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 6, overflow: "hidden" },
+  dimFill: { height: 6, borderRadius: 6 },
+  dimPct: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", width: 30, textAlign: "right" },
+  hdr: { flexDirection: "row", alignItems: "center", gap: 14, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" },
+  backIcon: { color: C.text, fontSize: 18, marginLeft: -2 },
+  hdrTitle: { color: C.text, fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.3 },
+  hdrSub: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
   body: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
   muted: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
-  errorMsg: { color: C.error, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
-
-  // ── Buttons
+  errMsg: { color: C.error, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
   gradBtn: { borderRadius: 50, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center" },
-  gradBtnText: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
-  ghostBtn: { borderRadius: 50, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center", borderWidth: 1, borderColor: C.border, backgroundColor: "transparent" },
-  ghostBtnText: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
+  gradBtnTxt: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
+  ghostBtn: { borderRadius: 50, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center", borderWidth: 1, borderColor: C.border },
+  ghostBtnTxt: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
 });
