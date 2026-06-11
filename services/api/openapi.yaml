@@ -1,0 +1,3 @@
+# Generated artifact placeholder.
+# Run: python -m scripts.export_openapi_yaml
+# Output will overwrite this file with full OpenAPI YAML.

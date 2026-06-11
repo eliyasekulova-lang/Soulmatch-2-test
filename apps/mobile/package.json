@@ -1,0 +1,29 @@
+{
+  "name": "soulmatch-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "start:dev": "EXPO_PUBLIC_ENV=development expo start",
+    "start:staging": "EXPO_PUBLIC_ENV=staging expo start",
+    "start:prod": "EXPO_PUBLIC_ENV=production expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo-google-fonts/space-grotesk": "^0.2.3",
+    "@expo/metro-runtime": "~3.2.3",
+    "expo": "~51.0.28",
+    "expo-font": "~12.0.10",
+    "expo-linear-gradient": "~13.0.2",
+    "expo-status-bar": "~1.12.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.74.5",
+    "react-native-maps": "1.14.0",
+    "react-native-web": "~0.19.10",
+    "tz-lookup": "^6.1.25"
+  }
+}

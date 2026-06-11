@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info:
+  title: SoulMatch API
+  version: 1.0.0
+paths:
+  /v1/auth/signup:
+    post: { summary: Signup }
+  /v1/auth/login:
+    post: { summary: Login }
+  /v1/me:
+    get: { summary: Current user }
+  /v1/profile:
+    get: { summary: Get profile }
+    put: { summary: Update profile }
+  /v1/profile/birthdata:
+    post: { summary: Upsert birth data }
+  /v1/policies:
+    get: { summary: List policies }
+  /v1/policies/{key}:
+    get: { summary: Get policy }
+  /v1/policies/{key}/versions/{version}:
+    get: { summary: Get policy version }
+  /v1/consents:
+    post: { summary: Capture consent }
+  /v1/consents/history:
+    get: { summary: Consent history }
+  /v1/conversations:
+    get: { summary: List conversations }
+    post: { summary: Create conversation }
+  /v1/messages:
+    get: { summary: List messages }
+    post: { summary: Send message }
+  /v1/media/presign:
+    post: { summary: Presign upload }
+  /v1/media/{id}/attach:
+    post: { summary: Attach media }
+  /v1/media/{id}:
+    get: { summary: Get media URL }
+  /v1/reports:
+    post: { summary: Report user/content }
+  /v1/blocks:
+    post: { summary: Block user }
+  /v1/blocks/{blockedUserId}:
+    delete: { summary: Unblock user }
+  /v1/rights/export:
+    post: { summary: Export request }
+  /v1/rights/delete:
+    post: { summary: Delete request }
+  /v1/rights/requests:
+    get: { summary: List rights requests }
+  /v1/admin/reports:
+    get: { summary: Admin reports }
+  /v1/admin/reports/{id}/actions:
+    post: { summary: Admin report action }
+  /v1/admin/users/{id}/suspend:
+    post: { summary: Suspend user }
+  /v1/admin/users/{id}/ban:
+    post: { summary: Ban user }
+  /v1/admin/audit:
+    get: { summary: Admin audit }

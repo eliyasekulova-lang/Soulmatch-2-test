@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "SoulMatch",
+    "slug": "soulmatch",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.soulmatch.app"
+    },
+    "android": {
+      "package": "com.soulmatch.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B0E14"
+      }
+    }
+  }
+}
