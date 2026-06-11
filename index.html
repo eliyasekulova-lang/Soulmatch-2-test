@@ -3,25 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SoulMatch — Find Your Cosmic Match</title>
+  <title>SoulMatch — Match Based on Who You Actually Are</title>
+  <meta name="description" content="SoulMatch uses deep psychology assessment and behaviour analysis to surface people you're genuinely compatible with — for romance or friendship." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0B0E14;
-      --bg2:       #10141E;
-      --bg3:       #161B27;
-      --purple:    #7B2FBE;
-      --violet:    #9D4EDD;
-      --pink:      #E040FB;
-      --gold:      #FFD700;
-      --text:      #F0F0F8;
-      --muted:     #8A8FA8;
-      --border:    rgba(255,255,255,0.08);
-      --grad:      linear-gradient(135deg, #7B2FBE 0%, #E040FB 100%);
-      --grad2:     linear-gradient(135deg, #1A0A2E 0%, #0B0E14 100%);
+      --bg:     #0B0E14;
+      --bg2:    #10141E;
+      --bg3:    #161B27;
+      --bg4:    #1C2233;
+      --purple: #7B2FBE;
+      --violet: #9D4EDD;
+      --pink:   #E040FB;
+      --teal:   #00C9C8;
+      --gold:   #FFD700;
+      --green:  #40FB82;
+      --text:   #F0F0F8;
+      --muted:  #8A8FA8;
+      --border: rgba(255,255,255,0.08);
+      --grad:   linear-gradient(135deg, #7B2FBE 0%, #E040FB 100%);
+      --grad2:  linear-gradient(135deg, #00C9C8 0%, #7B2FBE 100%);
     }
 
     html { scroll-behavior: smooth; }
@@ -34,471 +38,246 @@
       overflow-x: hidden;
     }
 
-    /* ── STARS ── */
+    /* ── CANVAS ── */
     #stars-canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.6;
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 0; opacity: 0.4;
     }
 
     /* ── NAV ── */
     nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 1.2rem 6%;
-      background: rgba(11,14,20,0.85);
-      backdrop-filter: blur(16px);
+      background: rgba(11,14,20,0.9);
+      backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
-
     .logo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.02em;
+      font-size: 1.4rem; font-weight: 700;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
     .nav-links { display: flex; gap: 2rem; list-style: none; }
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      font-weight: 500;
-      transition: color 0.2s;
-    }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
     .nav-links a:hover { color: var(--text); }
-
     .btn-nav {
-      background: var(--grad);
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      padding: 0.55rem 1.4rem;
-      font-family: inherit;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s;
-      text-decoration: none;
+      background: var(--grad); color: #fff; border: none; border-radius: 50px;
+      padding: 0.55rem 1.4rem; font-family: inherit; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s, transform 0.2s; text-decoration: none;
     }
     .btn-nav:hover { opacity: 0.85; transform: translateY(-1px); }
 
-    /* ── SECTIONS ── */
     section { position: relative; z-index: 1; }
 
     /* ── HERO ── */
     #hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 7rem 6% 5rem;
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 6% 5rem;
     }
-
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(123,47,190,0.2);
-      border: 1px solid rgba(157,78,221,0.4);
-      border-radius: 50px;
-      padding: 0.4rem 1rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #C77DFF;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 2rem;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(0,201,200,0.12); border: 1px solid rgba(0,201,200,0.3);
+      border-radius: 50px; padding: 0.4rem 1rem;
+      font-size: 0.78rem; font-weight: 600; color: var(--teal);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2rem;
     }
-
     h1 {
-      font-size: clamp(2.8rem, 7vw, 5.5rem);
-      font-weight: 700;
-      line-height: 1.08;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.5rem;
-      max-width: 820px;
+      font-size: clamp(2.8rem, 7vw, 5.5rem); font-weight: 700;
+      line-height: 1.06; letter-spacing: -0.03em;
+      margin-bottom: 1.5rem; max-width: 860px;
     }
-
     .gradient-text {
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
+    .gradient-text-2 {
+      background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
     .hero-sub {
-      font-size: clamp(1rem, 2.5vw, 1.25rem);
-      color: var(--muted);
-      max-width: 560px;
-      margin-bottom: 3rem;
-      font-weight: 400;
+      font-size: clamp(1rem, 2.5vw, 1.2rem); color: var(--muted);
+      max-width: 600px; margin-bottom: 3rem; font-weight: 400; line-height: 1.7;
     }
-
-    .hero-cta {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 4rem;
-    }
-
+    .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 4rem; }
     .btn-primary {
-      background: var(--grad);
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      padding: 0.9rem 2.2rem;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-      text-decoration: none;
-      display: inline-block;
-      box-shadow: 0 0 30px rgba(157,78,221,0.3);
+      background: var(--grad); color: #fff; border: none; border-radius: 50px;
+      padding: 0.9rem 2.2rem; font-family: inherit; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+      text-decoration: none; display: inline-block; box-shadow: 0 0 30px rgba(157,78,221,0.3);
     }
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-2px);
-      box-shadow: 0 0 50px rgba(157,78,221,0.5);
-    }
-
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 0 50px rgba(157,78,221,0.5); }
     .btn-secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 50px;
-      padding: 0.9rem 2.2rem;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      text-decoration: none;
-      display: inline-block;
+      background: transparent; color: var(--text); border: 1px solid var(--border);
+      border-radius: 50px; padding: 0.9rem 2.2rem; font-family: inherit;
+      font-size: 1rem; font-weight: 500; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s; text-decoration: none; display: inline-block;
     }
-    .btn-secondary:hover {
-      border-color: rgba(157,78,221,0.6);
-      background: rgba(157,78,221,0.08);
-    }
+    .btn-secondary:hover { border-color: rgba(157,78,221,0.6); background: rgba(157,78,221,0.08); }
 
-    .hero-stats {
-      display: flex;
-      gap: 3rem;
-      justify-content: center;
-      flex-wrap: wrap;
+    /* ── DIMENSION PILLS ── */
+    .dimension-cloud {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+      justify-content: center; max-width: 680px; margin-bottom: 3.5rem;
     }
+    .dim-pill {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 50px; padding: 0.35rem 0.9rem;
+      font-size: 0.78rem; font-weight: 500; color: var(--muted);
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .dim-pill.active { border-color: rgba(157,78,221,0.5); color: #C77DFF; }
 
+    /* ── STATS ── */
+    .hero-stats { display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap; }
     .stat { text-align: center; }
     .stat-num {
-      font-size: 1.8rem;
-      font-weight: 700;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-size: 2rem; font-weight: 700;
+      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
 
     /* ── MARQUEE ── */
     .marquee-wrap {
-      overflow: hidden;
-      padding: 1.5rem 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
+      overflow: hidden; padding: 1.4rem 0;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.018);
     }
-    .marquee-track {
-      display: flex;
-      gap: 3rem;
-      animation: marquee 30s linear infinite;
-      width: max-content;
-    }
-    .marquee-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      white-space: nowrap;
-      color: var(--muted);
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
-    .marquee-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--violet); }
+    .marquee-track { display: flex; gap: 3rem; animation: marquee 35s linear infinite; width: max-content; }
+    .marquee-item { display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
+    .marquee-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--violet); flex-shrink: 0; }
     @keyframes marquee { to { transform: translateX(-50%); } }
 
+    /* ── SECTIONS SHARED ── */
+    .section-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 1rem; }
+    .section-title { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; max-width: 640px; margin-left: auto; margin-right: auto; }
+    .section-sub { color: var(--muted); max-width: 520px; margin: 0 auto 4rem; font-size: 1rem; line-height: 1.7; }
+
     /* ── HOW IT WORKS ── */
-    #how {
-      padding: 7rem 6%;
-      text-align: center;
-    }
-
-    .section-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #C77DFF;
-      margin-bottom: 1rem;
-    }
-
-    .section-title {
-      font-size: clamp(1.8rem, 4vw, 3rem);
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 1rem;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .section-sub {
-      color: var(--muted);
-      max-width: 500px;
-      margin: 0 auto 4rem;
-      font-size: 1rem;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
+    #how { padding: 7rem 6%; text-align: center; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; max-width: 1060px; margin: 0 auto; }
     .step-card {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem 1.8rem;
-      text-align: left;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem 1.8rem; text-align: left; position: relative; overflow: hidden;
       transition: border-color 0.3s, transform 0.3s;
-      position: relative;
-      overflow: hidden;
     }
-    .step-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--grad);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-    .step-card:hover { border-color: rgba(157,78,221,0.5); transform: translateY(-4px); }
-    .step-card:hover::before { opacity: 0.04; }
+    .step-card:hover { border-color: rgba(157,78,221,0.45); transform: translateY(-4px); }
+    .step-num { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--teal); margin-bottom: 1rem; }
+    .step-icon { font-size: 2.2rem; margin-bottom: 1rem; display: block; }
+    .step-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .step-card p { color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
 
-    .step-num {
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      color: var(--violet);
-      margin-bottom: 1rem;
+    /* ── PSYCHOLOGY BREAKDOWN ── */
+    #psychology {
+      padding: 7rem 6%;
+      background: linear-gradient(180deg, transparent, rgba(0,201,200,0.03), transparent);
     }
-
-    .step-icon {
-      font-size: 2.2rem;
-      margin-bottom: 1rem;
-      display: block;
+    .psych-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1060px; margin: 0 auto; align-items: center; }
+    .psych-dims { display: flex; flex-direction: column; gap: 1rem; }
+    .dim-row { display: flex; align-items: center; gap: 1rem; }
+    .dim-label { width: 200px; font-size: 0.85rem; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+    .dim-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+    .dim-bar { height: 100%; border-radius: 6px; background: var(--grad2); }
+    .psych-copy h2 { font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.2rem; line-height: 1.2; }
+    .psych-copy p { color: var(--muted); font-size: 0.95rem; line-height: 1.75; margin-bottom: 1.5rem; }
+    .astro-note {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(123,47,190,0.1); border: 1px solid rgba(123,47,190,0.2);
+      border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.82rem; color: #C77DFF;
     }
-
-    .step-card h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .step-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
 
     /* ── FEATURES ── */
-    #features {
-      padding: 7rem 6%;
-      background: linear-gradient(180deg, transparent, rgba(123,47,190,0.04), transparent);
-    }
-
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
+    #features { padding: 7rem 6%; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
     .feature-card {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 2rem;
-      transition: border-color 0.3s, transform 0.3s;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem; transition: border-color 0.3s, transform 0.3s;
     }
-    .feature-card:hover { border-color: rgba(157,78,221,0.4); transform: translateY(-3px); }
-
-    .feature-icon {
-      width: 48px; height: 48px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.4rem;
-      margin-bottom: 1.2rem;
-    }
-    .icon-purple { background: rgba(123,47,190,0.2); }
-    .icon-pink   { background: rgba(224,64,251,0.15); }
-    .icon-gold   { background: rgba(255,215,0,0.12); }
-    .icon-blue   { background: rgba(64,153,251,0.15); }
-    .icon-green  { background: rgba(64,251,130,0.12); }
-    .icon-rose   { background: rgba(251,64,100,0.12); }
-
+    .feature-card:hover { border-color: rgba(0,201,200,0.3); transform: translateY(-3px); }
+    .feature-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1.2rem; }
+    .i-teal   { background: rgba(0,201,200,0.15); }
+    .i-purple { background: rgba(123,47,190,0.2); }
+    .i-pink   { background: rgba(224,64,251,0.12); }
+    .i-gold   { background: rgba(255,215,0,0.1); }
+    .i-green  { background: rgba(64,251,130,0.1); }
+    .i-blue   { background: rgba(64,153,251,0.12); }
     .feature-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; }
-    .feature-card p  { color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+    .feature-card p  { color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
+
+    /* ── VS SECTION ── */
+    #vs { padding: 7rem 6%; text-align: center; }
+    .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 800px; margin: 0 auto; }
+    .vs-card { border-radius: 20px; padding: 2rem; text-align: left; }
+    .vs-bad { background: rgba(255,80,80,0.05); border: 1px solid rgba(255,80,80,0.15); }
+    .vs-good { background: rgba(64,251,130,0.04); border: 1px solid rgba(64,251,130,0.2); }
+    .vs-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.2rem; }
+    .vs-bad .vs-title { color: #FF8080; }
+    .vs-good .vs-title { color: var(--green); }
+    .vs-item { display: flex; align-items: flex-start; gap: 0.7rem; margin-bottom: 0.75rem; font-size: 0.88rem; color: var(--muted); }
+    .vs-icon { flex-shrink: 0; margin-top: 1px; }
 
     /* ── TESTIMONIALS ── */
-    #testimonials {
-      padding: 7rem 6%;
-      text-align: center;
-    }
-
-    .testimonials-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      max-width: 1000px;
-      margin: 0 auto;
-    }
-
-    .testi-card {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 1.8rem;
-      text-align: left;
-    }
-
-    .stars { color: var(--gold); font-size: 0.9rem; margin-bottom: 1rem; letter-spacing: 2px; }
-    .testi-quote { font-size: 0.95rem; color: var(--text); line-height: 1.7; margin-bottom: 1.5rem; }
+    #testimonials { padding: 7rem 6%; text-align: center; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
+    .testi-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 1.8rem; text-align: left; }
+    .stars { color: var(--gold); font-size: 0.85rem; margin-bottom: 1rem; letter-spacing: 2px; }
+    .testi-quote { font-size: 0.95rem; color: var(--text); line-height: 1.75; margin-bottom: 1.5rem; }
     .testi-author { display: flex; align-items: center; gap: 0.8rem; }
-    .avatar {
-      width: 36px; height: 36px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem;
-    }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .testi-name { font-size: 0.85rem; font-weight: 600; }
-    .testi-sign { font-size: 0.75rem; color: var(--violet); }
+    .testi-detail { font-size: 0.75rem; color: var(--muted); }
 
-    /* ── BETA SIGNUP ── */
-    #beta {
-      padding: 7rem 6%;
-    }
-
+    /* ── BETA ── */
+    #beta { padding: 7rem 6%; }
     .beta-box {
-      max-width: 680px;
-      margin: 0 auto;
-      background: var(--bg3);
-      border: 1px solid rgba(157,78,221,0.25);
-      border-radius: 28px;
-      padding: 3.5rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+      max-width: 680px; margin: 0 auto; background: var(--bg3);
+      border: 1px solid rgba(157,78,221,0.25); border-radius: 28px; padding: 3.5rem;
+      text-align: center; position: relative; overflow: hidden;
     }
-
     .beta-box::before {
-      content: '';
-      position: absolute;
-      top: -100px; left: 50%;
-      transform: translateX(-50%);
+      content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
       width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(157,78,221,0.15) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(157,78,221,0.12) 0%, transparent 70%);
       pointer-events: none;
     }
-
     .beta-box h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; margin-bottom: 0.8rem; }
-    .beta-box p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
-
-    .form-row {
-      display: flex;
-      gap: 0.8rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
+    .beta-box p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.7; }
+    .form-row { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
     .form-input {
-      flex: 1;
-      min-width: 220px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      border-radius: 50px;
-      padding: 0.85rem 1.5rem;
-      font-family: inherit;
-      font-size: 0.95rem;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
+      flex: 1; min-width: 220px; background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border); border-radius: 50px; padding: 0.85rem 1.5rem;
+      font-family: inherit; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s;
     }
     .form-input::placeholder { color: var(--muted); }
     .form-input:focus { border-color: rgba(157,78,221,0.6); }
-
     .success-msg {
-      display: none;
-      margin-top: 1.5rem;
-      padding: 1rem;
-      background: rgba(64,251,130,0.1);
-      border: 1px solid rgba(64,251,130,0.3);
-      border-radius: 12px;
-      color: #40fb82;
-      font-size: 0.9rem;
+      display: none; margin-top: 1.5rem; padding: 1rem;
+      background: rgba(64,251,130,0.08); border: 1px solid rgba(64,251,130,0.25);
+      border-radius: 12px; color: var(--green); font-size: 0.9rem;
     }
-
-    .beta-perks {
-      display: flex;
-      gap: 1.5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 1.8rem;
-    }
-    .perk {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-    .perk-dot { color: #40fb82; font-size: 1rem; }
+    .beta-perks { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1.8rem; }
+    .perk { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); }
+    .perk-dot { color: var(--green); }
 
     /* ── FOOTER ── */
     footer {
-      padding: 3rem 6%;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: gap;
-      gap: 1rem;
+      padding: 3rem 6%; border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
     }
-
-    .footer-logo {
-      font-size: 1.1rem;
-      font-weight: 700;
-      background: var(--grad);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
+    .footer-logo { font-size: 1.1rem; font-weight: 700; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .footer-copy { color: var(--muted); font-size: 0.8rem; }
-
     .footer-links { display: flex; gap: 1.5rem; }
-    .footer-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.8rem;
-      transition: color 0.2s;
-    }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
     .footer-links a:hover { color: var(--text); }
 
-    /* ── RESPONSIVE ── */
+    /* ── ORB GLOWS ── */
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 500px; height: 500px; background: rgba(0,201,200,0.08); top: 5%; left: -15%; }
+    .orb-2 { width: 350px; height: 350px; background: rgba(123,47,190,0.15); top: 25%; right: -8%; }
+
+    @media (max-width: 768px) {
+      .psych-grid { grid-template-columns: 1fr; }
+      .vs-grid { grid-template-columns: 1fr; }
+      .dim-label { width: 150px; }
+    }
     @media (max-width: 640px) {
       nav { padding: 1rem 4%; }
       .nav-links { display: none; }
@@ -506,17 +285,6 @@
       .beta-box { padding: 2.5rem 1.5rem; }
       footer { flex-direction: column; text-align: center; }
     }
-
-    /* ── GLOW ORBS ── */
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      pointer-events: none;
-      z-index: 0;
-    }
-    .orb-1 { width: 400px; height: 400px; background: rgba(123,47,190,0.2); top: 10%; left: -10%; }
-    .orb-2 { width: 300px; height: 300px; background: rgba(224,64,251,0.15); top: 20%; right: -5%; }
   </style>
 </head>
 <body>
@@ -528,10 +296,10 @@
   <div class="logo">✦ SoulMatch</div>
   <ul class="nav-links">
     <li><a href="#how">How it works</a></li>
+    <li><a href="#psychology">The assessment</a></li>
     <li><a href="#features">Features</a></li>
-    <li><a href="#testimonials">Stories</a></li>
   </ul>
-  <a href="#beta" class="btn-nav">Join Beta</a>
+  <a href="#beta" class="btn-nav">Get early access</a>
 </nav>
 
 <!-- HERO -->
@@ -539,35 +307,50 @@
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
 
-  <div class="badge">✦ Beta launching in Toronto</div>
+  <div class="badge">✦ Closed beta · Toronto</div>
 
   <h1>
-    Where the stars align<br>
-    <span class="gradient-text">your perfect match</span>
+    Stop guessing.<br>
+    <span class="gradient-text">Match based on who<br>you actually are.</span>
   </h1>
 
   <p class="hero-sub">
-    SoulMatch combines your birth chart, psychology, and AI to surface the people you're
-    genuinely compatible with — for romance or friendship.
+    SoulMatch uses a deep psychological assessment to understand how you think, attach, communicate, and grow — then connects you with people who are genuinely compatible, not just attractive on paper.
   </p>
 
+  <!-- Animated dimension pills -->
+  <div class="dimension-cloud">
+    <span class="dim-pill active">Attachment style</span>
+    <span class="dim-pill">Emotional regulation</span>
+    <span class="dim-pill active">Communication patterns</span>
+    <span class="dim-pill">Conflict approach</span>
+    <span class="dim-pill active">Core values</span>
+    <span class="dim-pill">Vulnerability comfort</span>
+    <span class="dim-pill active">Independence needs</span>
+    <span class="dim-pill">Love language</span>
+    <span class="dim-pill active">Growth mindset</span>
+    <span class="dim-pill">Reassurance needs</span>
+    <span class="dim-pill">Openness</span>
+    <span class="dim-pill active">Relationship goals</span>
+  </div>
+
   <div class="hero-cta">
-    <a href="#beta" class="btn-primary">Get Early Access →</a>
+    <a href="#beta" class="btn-primary">Join the beta →</a>
     <a href="#how" class="btn-secondary">See how it works</a>
   </div>
 
   <div class="hero-stats">
     <div class="stat">
-      <div class="stat-num">12+</div>
-      <div class="stat-label">Compatibility dimensions</div>
+      <div class="stat-num">12</div>
+      <div class="stat-label">Psychological dimensions</div>
     </div>
     <div class="stat">
       <div class="stat-num">2</div>
-      <div class="stat-label">Match modes (romance & friendship)</div>
+      <div class="stat-label">Match modes — romance & friendship</div>
     </div>
     <div class="stat">
-      <div class="stat-num">100%</div>
-      <div class="stat-label">Privacy-first design</div>
+      <div class="stat-num">0</div>
+      <div class="stat-label">Shallow swipes</div>
     </div>
   </div>
 </section>
@@ -575,53 +358,114 @@
 <!-- MARQUEE -->
 <div class="marquee-wrap">
   <div class="marquee-track">
-    <span class="marquee-item"><span class="marquee-dot"></span>Astrology-powered matching</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Psychology profiling</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Attachment style matching</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Adaptive psychology assessment</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Behaviour pattern analysis</span>
     <span class="marquee-item"><span class="marquee-dot"></span>Romance & Friendship modes</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Birth chart analysis</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Privacy-first</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>AI-ranked matches</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Launching in Toronto</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Astrology-powered matching</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Psychology profiling</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Privacy-first by design</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>No swiping. No algorithms. Real compatibility.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Conflict style compatibility</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Values alignment scoring</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Launching Toronto 2026</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Attachment style matching</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Adaptive psychology assessment</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Behaviour pattern analysis</span>
     <span class="marquee-item"><span class="marquee-dot"></span>Romance & Friendship modes</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Birth chart analysis</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Privacy-first</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>AI-ranked matches</span>
-    <span class="marquee-item"><span class="marquee-dot"></span>Launching in Toronto</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Privacy-first by design</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>No swiping. No algorithms. Real compatibility.</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Conflict style compatibility</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Values alignment scoring</span>
+    <span class="marquee-item"><span class="marquee-dot"></span>Launching Toronto 2026</span>
   </div>
 </div>
 
 <!-- HOW IT WORKS -->
 <section id="how">
-  <div class="section-label">✦ The process</div>
-  <h2 class="section-title">Three minutes to your cosmic profile</h2>
-  <p class="section-sub">No endless swiping. No shallow bios. Just deep compatibility built from who you actually are.</p>
+  <div style="text-align:center">
+    <div class="section-label">✦ The process</div>
+    <h2 class="section-title">Four minutes to your psychological profile</h2>
+    <p class="section-sub">No endless questionnaires. An adaptive assessment that gets smarter as you answer — and actually tells you something true about yourself.</p>
+  </div>
 
   <div class="steps">
     <div class="step-card">
       <div class="step-num">STEP 01</div>
-      <span class="step-icon">🌙</span>
-      <h3>Enter your birth data</h3>
-      <p>Date, time, and place of birth — we calculate your full natal chart and unique AstroVector signature.</p>
+      <span class="step-icon">🧠</span>
+      <h3>Take the adaptive assessment</h3>
+      <p>A short, adaptive question set maps you across 12 psychological dimensions — attachment style, emotional regulation, values, conflict approach, and more. Takes about 4 minutes.</p>
     </div>
     <div class="step-card">
       <div class="step-num">STEP 02</div>
-      <span class="step-icon">🧠</span>
-      <h3>Complete your psych profile</h3>
-      <p>A short adaptive assessment maps your personality across 12 dimensions — no Myers-Briggs recycling.</p>
+      <span class="step-icon">🔍</span>
+      <h3>Get your psychological profile</h3>
+      <p>See a clear, honest breakdown of how you show up in relationships — strengths, patterns, and the dimensions that matter most for long-term compatibility.</p>
     </div>
     <div class="step-card">
       <div class="step-num">STEP 03</div>
-      <span class="step-icon">✨</span>
+      <span class="step-icon">🎯</span>
       <h3>Choose your mode</h3>
-      <p>Romance or Friendship? Toggle anytime. Your matches are ranked by multi-layer compatibility, not popularity.</p>
+      <p>Romance or Friendship — or both. Each mode uses different compatibility weights because what makes a great partner is not the same as what makes a great friend.</p>
     </div>
     <div class="step-card">
       <div class="step-num">STEP 04</div>
-      <span class="step-icon">💫</span>
-      <h3>Meet your matches</h3>
-      <p>See compatibility highlights, synastry insights, and shared dimensions before you even say hello.</p>
+      <span class="step-icon">💬</span>
+      <h3>Meet people who actually fit</h3>
+      <p>Your matches come with a compatibility breakdown — not just a score, but a clear explanation of why you align and where you might have friction.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PSYCHOLOGY BREAKDOWN -->
+<section id="psychology">
+  <div class="psych-grid">
+    <div class="psych-copy">
+      <div class="section-label">✦ The assessment</div>
+      <h2>The deepest compatibility model built into a dating app.</h2>
+      <p>Most apps let you pick a few interests and call it a day. SoulMatch measures twelve dimensions of your psychological profile — the things that actually determine whether two people can build something together.</p>
+      <p>The assessment is adaptive: it adjusts based on your answers, so you're never wasting time on questions that don't apply to you.</p>
+      <div class="astro-note">
+        ♈ Optional: add your birth chart for an astrology compatibility layer
+      </div>
+    </div>
+    <div class="psych-dims">
+      <div class="dim-row"><span class="dim-label">Attachment style</span><div class="dim-bar-bg"><div class="dim-bar" style="width:92%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Emotional regulation</span><div class="dim-bar-bg"><div class="dim-bar" style="width:78%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Core values</span><div class="dim-bar-bg"><div class="dim-bar" style="width:88%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Communication style</span><div class="dim-bar-bg"><div class="dim-bar" style="width:65%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Conflict approach</span><div class="dim-bar-bg"><div class="dim-bar" style="width:82%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Independence need</span><div class="dim-bar-bg"><div class="dim-bar" style="width:71%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Vulnerability comfort</span><div class="dim-bar-bg"><div class="dim-bar" style="width:59%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Reassurance need</span><div class="dim-bar-bg"><div class="dim-bar" style="width:44%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Love language</span><div class="dim-bar-bg"><div class="dim-bar" style="width:95%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Growth mindset</span><div class="dim-bar-bg"><div class="dim-bar" style="width:87%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Openness</span><div class="dim-bar-bg"><div class="dim-bar" style="width:76%"></div></div></div>
+      <div class="dim-row"><span class="dim-label">Relationship goals</span><div class="dim-bar-bg"><div class="dim-bar" style="width:100%"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VS SECTION -->
+<section id="vs">
+  <div class="section-label">✦ Why it's different</div>
+  <h2 class="section-title">Dating apps are broken.<br>Here's why.</h2>
+  <p class="section-sub" style="margin-bottom:3rem">The problem isn't that you're not meeting enough people. It's that the people you're meeting aren't right for you.</p>
+
+  <div class="vs-grid">
+    <div class="vs-card vs-bad">
+      <div class="vs-title">❌ Every other app</div>
+      <div class="vs-item"><span class="vs-icon">✗</span> Matching based on photos and a 300-char bio</div>
+      <div class="vs-item"><span class="vs-icon">✗</span> Optimised for engagement, not compatibility</div>
+      <div class="vs-item"><span class="vs-icon">✗</span> No explanation for why you matched</div>
+      <div class="vs-item"><span class="vs-icon">✗</span> Same algorithm for romance and friendship</div>
+      <div class="vs-item"><span class="vs-icon">✗</span> You learn nothing about yourself</div>
+    </div>
+    <div class="vs-card vs-good">
+      <div class="vs-title">✓ SoulMatch</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Matching based on 12 psychological dimensions</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Optimised for genuine long-term fit</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Every match includes a compatibility breakdown</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Separate scoring for romance vs. friendship</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> You leave with real insight into yourself</div>
     </div>
   </div>
 </section>
@@ -630,81 +474,81 @@
 <section id="features">
   <div style="text-align:center">
     <div class="section-label">✦ Built different</div>
-    <h2 class="section-title">What makes SoulMatch unique</h2>
-    <p class="section-sub">Every feature is built around depth, not dopamine.</p>
+    <h2 class="section-title">Every feature built around depth</h2>
+    <p class="section-sub">Not engagement. Not dopamine. Actual compatibility.</p>
   </div>
 
   <div class="features-grid">
     <div class="feature-card">
-      <div class="feature-icon icon-purple">♈</div>
-      <h3>Swiss Ephemeris Precision</h3>
-      <p>Chart calculations powered by the same engine used by professional astrologers — not approximations.</p>
+      <div class="feature-icon i-teal">🧬</div>
+      <h3>Adaptive Assessment Engine</h3>
+      <p>Questions adjust in real-time based on your answers. No irrelevant questions, no wasted time — the assessment gets more precise the more you answer.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon icon-pink">🧬</div>
-      <h3>Psychology Engine v3</h3>
-      <p>Adaptive assessment with 12 canonical dimensions — openness, attachment style, values, and more.</p>
+      <div class="feature-icon i-purple">📊</div>
+      <h3>12-Dimension Psychological Profile</h3>
+      <p>Attachment style, emotional regulation, values, conflict approach, love language — mapped into a profile you can actually read and recognise yourself in.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon icon-gold">⚡</div>
-      <h3>Synastry Heuristics</h3>
-      <p>We don't just compare sun signs. We analyze 20+ planetary aspects between your charts.</p>
+      <div class="feature-icon i-green">🎯</div>
+      <h3>Compatibility Breakdown</h3>
+      <p>Every match shows you exactly where you align and where you might have friction — not just a score, but the reasoning behind it.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon icon-blue">🔒</div>
-      <h3>Privacy by Design</h3>
-      <p>GDPR-compliant from day one. Your birth data and psychology profile are encrypted at rest.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon icon-green">🎯</div>
+      <div class="feature-icon i-pink">🔄</div>
       <h3>Dual-Mode Matching</h3>
-      <p>Romance and Friendship are powered by different scoring weights — built separately, not hacked together.</p>
+      <p>Romance and Friendship use different compatibility weights. What makes a great partner is not the same as what makes a great friend — we treat them separately.</p>
     </div>
     <div class="feature-card">
-      <div class="feature-icon icon-rose">💬</div>
-      <h3>Context-Aware Openers</h3>
-      <p>AI-suggested conversation starters based on your shared compatibility dimensions — never generic.</p>
+      <div class="feature-icon i-blue">🔒</div>
+      <h3>Privacy by Design</h3>
+      <p>Your psychology profile is encrypted at rest. PIPEDA and GDPR compliant from day one. You can export or delete your data at any time.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon i-gold">♈</div>
+      <h3>Astrology Layer (Optional)</h3>
+      <p>Add your birth chart for an additional compatibility layer using Swiss Ephemeris precision. A meaningful enrichment — not the foundation of the match.</p>
     </div>
   </div>
 </section>
 
 <!-- TESTIMONIALS -->
 <section id="testimonials">
-  <div class="section-label">✦ Early voices</div>
-  <h2 class="section-title">What our alpha testers say</h2>
-  <p class="section-sub" style="margin-bottom:3rem">Real feedback from our first 50 users.</p>
+  <div class="section-label" style="text-align:center">✦ Early feedback</div>
+  <h2 class="section-title" style="text-align:center">What our alpha users say</h2>
+  <p class="section-sub" style="margin-bottom:3rem;text-align:center">Real feedback from our first testers.</p>
 
   <div class="testimonials-grid">
     <div class="testi-card">
       <div class="stars">★★★★★</div>
-      <p class="testi-quote">"Finally an app that doesn't feel like a slot machine. I matched with someone who had the exact same Saturn placement as me — we've been talking every day."</p>
+      <p class="testi-quote">"The assessment took 4 minutes and was more accurate than anything I've read about myself in years. The compatibility breakdown told me exactly why we clicked — and it was right."</p>
       <div class="testi-author">
-        <div class="avatar" style="background:rgba(123,47,190,0.3)">🌙</div>
+        <div class="avatar" style="background:rgba(0,201,200,0.15)">🧠</div>
         <div>
           <div class="testi-name">Maya R.</div>
-          <div class="testi-sign">Scorpio Rising · Toronto</div>
+          <div class="testi-detail">Anxious-secure attachment · Toronto</div>
         </div>
       </div>
     </div>
     <div class="testi-card">
       <div class="stars">★★★★★</div>
-      <p class="testi-quote">"The friendship mode is genuinely useful. I found two people I clicked with instantly — turns out we had overlapping Venus and Mercury placements."</p>
+      <p class="testi-quote">"I've tried every dating app. This is the first one where I actually understood why I matched with someone before we spoke. That changes the whole dynamic of the first conversation."</p>
       <div class="testi-author">
-        <div class="avatar" style="background:rgba(64,153,251,0.2)">⭐</div>
+        <div class="avatar" style="background:rgba(123,47,190,0.15)">💬</div>
         <div>
           <div class="testi-name">Jordan K.</div>
-          <div class="testi-sign">Aquarius Sun · Vancouver</div>
+          <div class="testi-detail">Secure attachment · Vancouver</div>
         </div>
       </div>
     </div>
     <div class="testi-card">
       <div class="stars">★★★★★</div>
-      <p class="testi-quote">"The psych profile took 4 minutes and was more accurate than anything I've taken before. The compatibility breakdown actually tells you WHY you match."</p>
+      <p class="testi-quote">"I used it in friendship mode and found two people I genuinely clicked with immediately. The shared values dimension was the most accurate — we basically had the same worldview."</p>
       <div class="testi-author">
-        <div class="avatar" style="background:rgba(224,64,251,0.2)">✨</div>
+        <div class="avatar" style="background:rgba(64,251,130,0.12)">✨</div>
         <div>
           <div class="testi-name">Sofia T.</div>
-          <div class="testi-sign">Libra Moon · Toronto</div>
+          <div class="testi-detail">Dismissive-avoidant · Toronto</div>
         </div>
       </div>
     </div>
@@ -714,9 +558,9 @@
 <!-- BETA SIGNUP -->
 <section id="beta">
   <div class="beta-box">
-    <div class="badge" style="margin-bottom:1.5rem">✦ Limited beta spots</div>
-    <h2>Get early access to <span class="gradient-text">SoulMatch</span></h2>
-    <p>Be the first to experience cosmic compatibility. Beta launching in Toronto — priority access for early signups.</p>
+    <div class="badge" style="margin-bottom:1.5rem">✦ Limited beta spots · Toronto</div>
+    <h2>Know yourself.<br><span class="gradient-text">Find your match.</span></h2>
+    <p>Join the closed beta launching in Toronto. First 500 users get free access to the full psychology report and premium matching features.</p>
 
     <form id="signup-form" onsubmit="handleSignup(event)">
       <div class="form-row">
@@ -724,15 +568,13 @@
         <button type="submit" class="btn-primary">Join the beta →</button>
       </div>
     </form>
-
     <div class="success-msg" id="success-msg">
       🌟 You're on the list! We'll reach out when your spot opens up.
     </div>
-
     <div class="beta-perks">
       <span class="perk"><span class="perk-dot">✓</span> Free during beta</span>
+      <span class="perk"><span class="perk-dot">✓</span> Full psychology report included</span>
       <span class="perk"><span class="perk-dot">✓</span> No spam, ever</span>
-      <span class="perk"><span class="perk-dot">✓</span> Priority access</span>
     </div>
   </div>
 </section>
@@ -740,7 +582,7 @@
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">✦ SoulMatch</div>
-  <div class="footer-copy">© 2026 SoulMatch. Launching in Toronto.</div>
+  <div class="footer-copy">© 2026 SoulMatch Inc. Toronto, Canada.</div>
   <div class="footer-links">
     <a href="#">Privacy</a>
     <a href="#">Terms</a>
@@ -753,44 +595,39 @@
   const canvas = document.getElementById('stars-canvas');
   const ctx = canvas.getContext('2d');
   let stars = [];
-
-  function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
   function initStars() {
-    stars = Array.from({length: 180}, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.2 + 0.2,
-      o: Math.random() * 0.7 + 0.1,
-      speed: Math.random() * 0.3 + 0.05,
-      phase: Math.random() * Math.PI * 2,
+    stars = Array.from({length: 140}, () => ({
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      r: Math.random() * 1.1 + 0.2, o: Math.random() * 0.6 + 0.1,
+      speed: Math.random() * 0.25 + 0.04, phase: Math.random() * Math.PI * 2,
     }));
   }
-
   function drawStars(t) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(s => {
-      const pulse = s.o * (0.6 + 0.4 * Math.sin(t * s.speed + s.phase));
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${pulse})`;
-      ctx.fill();
+      const pulse = s.o * (0.55 + 0.45 * Math.sin(t * s.speed + s.phase));
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${pulse})`; ctx.fill();
     });
     requestAnimationFrame(drawStars);
   }
-
-  resize();
-  initStars();
-  requestAnimationFrame(drawStars);
+  resize(); initStars(); requestAnimationFrame(drawStars);
   window.addEventListener('resize', () => { resize(); initStars(); });
+
+  /* ── PILL ANIMATION ── */
+  const pills = document.querySelectorAll('.dim-pill');
+  let pillIdx = 0;
+  setInterval(() => {
+    pills[pillIdx % pills.length].classList.remove('active');
+    pillIdx++;
+    pills[pillIdx % pills.length].classList.add('active');
+  }, 900);
 
   /* ── CONFIG ── */
   const API_BASE = 'https://soulmatch-api.onrender.com';
 
-  /* ── POSTHOG ANALYTICS ── */
+  /* ── POSTHOG ── */
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
   posthog.init('phc_placeholder_replace_with_real_key', { api_host: 'https://app.posthog.com', autocapture: true });
 
@@ -799,46 +636,33 @@
     e.preventDefault();
     const email = document.getElementById('email-input').value.trim();
     const btn = e.target.querySelector('button');
-    btn.textContent = 'Joining...';
-    btn.disabled = true;
-
+    btn.textContent = 'Joining...'; btn.disabled = true;
     posthog.capture('beta_signup_attempt', { source: 'landing_page' });
-
     try {
       const res = await fetch(`${API_BASE}/beta/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source: 'landing_page' }),
       });
       const data = await res.json();
       posthog.capture('beta_signup_success', { position: data.position });
       posthog.identify(email);
-    } catch (_err) {
-      // API not yet reachable — store locally as fallback
+    } catch (_) {
       const list = JSON.parse(localStorage.getItem('sm_beta') || '[]');
       if (!list.find(r => r.email === email)) list.push({ email, ts: new Date().toISOString() });
       localStorage.setItem('sm_beta', JSON.stringify(list));
-      posthog.capture('beta_signup_fallback', { reason: 'api_unreachable' });
+      posthog.capture('beta_signup_fallback');
     }
-
     document.getElementById('signup-form').style.display = 'none';
     document.getElementById('success-msg').style.display = 'block';
   }
 
-  /* ── INTERSECTION OBSERVER animations ── */
+  /* ── SCROLL ANIMATIONS ── */
   const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.style.opacity = '1';
-        e.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll('.step-card, .feature-card, .testi-card').forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(24px)';
-    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease, border-color 0.3s';
+    entries.forEach(e => { if (e.isIntersecting) { e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.step-card, .feature-card, .testi-card, .vs-card, .dim-row').forEach(el => {
+    el.style.opacity = '0'; el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease, border-color 0.3s, background 0.3s';
     observer.observe(el);
   });
 </script>
