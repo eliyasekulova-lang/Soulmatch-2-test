@@ -79,7 +79,8 @@ This is the most important phase. The psychology migration cannot proceed to pro
 | Task | Why |
 |---|---|
 | Share landing page link with first wave of beta users | Start collecting real users |
-| Target Toronto astrology communities (Reddit, Instagram, Facebook groups) | Your pilot city per the PRD |
+| Target psychology / self-development communities (Reddit: r/psychology, r/mbti, r/selfimprovement, r/relationships; Facebook groups around therapy, personal growth, attachment styles) | Core audience — people interested in understanding themselves, not just horoscopes |
+| Astrology communities are secondary, optional outreach | Astrology is one layer of the app, not the main identity — don't lead with it |
 | Reach out personally to 20–30 people (friends, friends of friends) | First users always come from personal networks |
 | Collect weekly feedback (simple Google Form) | You need to know what's confusing |
 | Fix bugs as they come in (dedicate 2 hrs/day to support) | Beta trust is fragile |
@@ -160,9 +161,9 @@ Toronto launch. Controlled, targeted, loud enough to matter.
 | Task | Why |
 |---|---|
 | Press release to Toronto tech/lifestyle media (BlogTO, Toronto Star tech section, NOW Magazine) | Local press drives local downloads |
-| Launch on Product Hunt | Tech-adjacent audience, astrology crossover is strong |
-| Instagram + TikTok content push (astrology content works extremely well on both) | Your audience lives here |
-| Partner with 3–5 Toronto astrology/wellness influencers | Micro-influencers (10k–100k) convert better than celebrities for niche apps |
+| Launch on Product Hunt | Tech-adjacent audience, strong fit for psychology + AI matching angle |
+| Instagram + TikTok content push — lead with psychology content (attachment styles, personality insights, relationship patterns) | This performs better and is more accurate to what the app actually does |
+| Partner with 3–5 Toronto psychology/wellness/relationship influencers, therapists, coaches | Far better fit than astrology influencers for the core product |
 | Host a small Toronto launch event (20–30 people) | Community, press, word of mouth |
 | Launch referral program ("give a free month, get a free month") | Viral loop |
 | Set up customer support email + response SLA | Scale begins here |
