@@ -185,7 +185,20 @@
     }
     .option:hover { border-color: var(--green); background: var(--bg4); }
     .option:active { transform: scale(0.99); }
-    .option.selected { border-color: var(--green); background: rgba(78,139,95,0.13); }
+    .option.selected { border-color: var(--green); background: rgba(78,139,95,0.13); cursor: default; }
+    .option.dim { opacity: 0.36; pointer-events: none; }
+
+    /* ── Intensity picker ────────────────────────────────────────────── */
+    .int-row { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .int-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-bottom: 0.55rem; }
+    .int-btns { display: flex; gap: 0.5rem; }
+    .int-btn {
+      flex: 1; padding: 0.48rem 0.2rem;
+      background: var(--bg4); border: 1px solid var(--border); border-radius: 8px;
+      font-family: inherit; font-size: 0.77rem; color: var(--muted);
+      cursor: pointer; transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .int-btn:hover { border-color: var(--green); color: var(--text); background: rgba(78,139,95,0.1); }
 
     /* ── Processing ──────────────────────────────────────────────────── */
     .spinner {
@@ -454,8 +467,11 @@ const TOTAL_Q = 13; // 12 main + 1 adaptive
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let mode = null;
-let answers = new Array(12).fill(null); // indices 0–11
+let answers     = new Array(12).fill(null); // indices 0–11
+let intensities = new Array(12).fill(null); // parallel intensity array
 let adaptiveAns = null;
+let adaptiveIntensity = null;
+let pendingOpt = null; // option selected but awaiting intensity pick
 let qIdx = 0;       // 0–11 = main, 12 = adaptive
 let curSlide = 'intro';
 let profile = null;
@@ -535,50 +551,92 @@ function renderQ() {
 
   const list = document.getElementById('optList');
   list.innerHTML = '';
-  const saved = isAdapt ? adaptiveAns : answers[qIdx];
+  pendingOpt = null;
+
+  const savedOpt = isAdapt ? adaptiveAns : answers[qIdx];
 
   q.options.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'option' + (saved === i ? ' selected' : '');
-    btn.textContent = opt;
-    btn.onclick = () => pick(i);
-    list.appendChild(btn);
+    const div = document.createElement('div');
+    div.className = 'option' + (savedOpt === i ? ' selected' : '');
+    div.innerHTML = '<span>' + opt + '</span>';
+    if (savedOpt !== i) {
+      div.onclick = () => pick(i);
+    } else {
+      pendingOpt = i;
+      div.appendChild(makeIntensityRow());
+    }
+    list.appendChild(div);
   });
 }
 
 function pick(i) {
-  const isAdapt = qIdx === 12;
-  if (isAdapt) adaptiveAns = i;
-  else answers[qIdx] = i;
-
-  document.querySelectorAll('.option').forEach((o, idx) => {
-    o.classList.toggle('selected', idx === i);
-    o.style.pointerEvents = 'none';
+  pendingOpt = i;
+  const items = document.querySelectorAll('#optList .option');
+  items.forEach((el, idx) => {
+    el.classList.toggle('selected', idx === i);
+    el.classList.toggle('dim', idx !== i);
+    el.onclick = idx === i ? null : () => pick(idx);
+    // Remove old intensity row if any
+    const old = el.querySelector('.int-row');
+    if (old) old.remove();
+    if (idx === i) el.appendChild(makeIntensityRow());
   });
+}
 
-  setTimeout(() => {
-    if (qIdx < TOTAL_Q - 1) {
-      qIdx++;
-      renderQ();
-      updateProg();
-    } else {
-      finish();
-    }
-  }, 280);
+function makeIntensityRow() {
+  const row = document.createElement('div');
+  row.className = 'int-row';
+  const label = document.createElement('div');
+  label.className = 'int-label';
+  label.textContent = 'How much does this fit?';
+  row.appendChild(label);
+  const btns = document.createElement('div');
+  btns.className = 'int-btns';
+  ['A little', 'Mostly', 'Exactly me'].forEach((lbl, level) => {
+    const btn = document.createElement('button');
+    btn.className = 'int-btn';
+    btn.textContent = lbl;
+    btn.onclick = (e) => { e.stopPropagation(); pickIntensity(level); };
+    btns.appendChild(btn);
+  });
+  row.appendChild(btns);
+  return row;
+}
+
+function pickIntensity(level) {
+  const isAdapt = qIdx === 12;
+  if (isAdapt) { adaptiveAns = pendingOpt; adaptiveIntensity = level; }
+  else { answers[qIdx] = pendingOpt; intensities[qIdx] = level; }
+  pendingOpt = null;
+
+  if (qIdx < TOTAL_Q - 1) {
+    qIdx++;
+    renderQ();
+    updateProg();
+  } else {
+    finish();
+  }
 }
 
 // ── SCORING ───────────────────────────────────────────────────────────────────
+function applyIntensity(rawScore, level) {
+  const mid = 50, mult = [0.4, 1.0, 1.35][level ?? 1];
+  return Math.max(5, Math.min(98, Math.round(mid + mult * (rawScore - mid))));
+}
+
 function computeProfile() {
   const dims = DIM_LABELS.map((label, i) => {
     const a = answers[i] ?? null;
-    const score = a !== null ? DIMENSION_SCORES[i][a] : 60;
+    const raw = a !== null ? DIMENSION_SCORES[i][a] : 60;
+    const score = a !== null ? applyIntensity(raw, intensities[i]) : 60;
     return { label, score };
   });
 
   const a0 = answers[0] ?? 1;
   if (adaptiveAns !== null && ADAPTIVE_DELTA[a0]) {
-    const delta = ADAPTIVE_DELTA[a0][adaptiveAns] ?? 0;
-    dims[0].score = Math.max(5, Math.min(98, dims[0].score + delta));
+    const baseDelta = ADAPTIVE_DELTA[a0][adaptiveAns] ?? 0;
+    const scaledDelta = Math.round(baseDelta * [0.4, 1.0, 1.35][adaptiveIntensity ?? 1]);
+    dims[0].score = Math.max(5, Math.min(98, dims[0].score + scaledDelta));
   }
 
   return {
@@ -657,7 +715,9 @@ async function saveProfile() {
     email,
     mode,
     answers,
+    intensities,
     adaptive_answer: adaptiveAns,
+    adaptive_intensity: adaptiveIntensity,
     attachment_type: profile?.attachmentType,
     dimension_scores: profile?.dimensions?.map(d => ({ label: d.label, score: d.score })),
   };
@@ -684,9 +744,12 @@ async function saveProfile() {
 }
 
 function restartAssessment() {
-  answers     = new Array(12).fill(null);
-  adaptiveAns = null;
-  qIdx        = 0;
+  answers           = new Array(12).fill(null);
+  intensities       = new Array(12).fill(null);
+  adaptiveAns       = null;
+  adaptiveIntensity = null;
+  pendingOpt        = null;
+  qIdx              = 0;
   mode        = null;
   profile     = null;
   document.getElementById('emailInput').value = '';

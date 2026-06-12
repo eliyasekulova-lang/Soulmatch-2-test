@@ -277,17 +277,23 @@ const DIM_LABELS = [
 ];
 
 // ── PROFILE COMPUTATION ───────────────────────────────────────────────────────
-function computeProfile(answers, adaptiveAnswer) {
+function computeProfile(answers, adaptiveAnswer, intensities, adaptiveIntensity) {
+  function applyIntensity(rawScore, level) {
+    const mid = 50, mult = [0.4, 1.0, 1.35][level ?? 1];
+    return Math.max(5, Math.min(98, Math.round(mid + mult * (rawScore - mid))));
+  }
   const dims = DIM_LABELS.map((label, i) => {
     const ans = answers[i] ?? null;
-    const score = ans !== null ? DIMENSION_SCORES[i][ans] : 60;
+    const raw = ans !== null ? DIMENSION_SCORES[i][ans] : 60;
+    const score = ans !== null ? applyIntensity(raw, intensities?.[i]) : 60;
     return { label, score, color: DIM_COLORS[i] };
   });
 
   const a0 = answers[0] ?? 1;
   if (adaptiveAnswer !== null && ADAPTIVE_DELTA[a0]) {
-    const delta = ADAPTIVE_DELTA[a0][adaptiveAnswer] ?? 0;
-    dims[0].score = Math.max(5, Math.min(98, dims[0].score + delta));
+    const baseDelta = ADAPTIVE_DELTA[a0][adaptiveAnswer] ?? 0;
+    const scaledDelta = Math.round(baseDelta * [0.4, 1.0, 1.35][adaptiveIntensity ?? 1]);
+    dims[0].score = Math.max(5, Math.min(98, dims[0].score + scaledDelta));
   }
 
   return {
@@ -715,11 +721,14 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
 
 // ── 4. ASSESSMENT (adaptive flow) ─────────────────────────────────────────────
 function AssessmentScreen({ onComplete, onSkip }) {
-  const [phase, setPhase]           = useState("main"); // "main" | "adaptive"
-  const [qIdx, setQIdx]             = useState(0);
-  const [answers, setAnswers]       = useState({});
-  const [adaptiveAns, setAdaptive]  = useState(null);
-  const [selected, setSel]          = useState(null);
+  const [phase, setPhase]                = useState("main"); // "main" | "adaptive"
+  const [qIdx, setQIdx]                  = useState(0);
+  const [answers, setAnswers]            = useState({});
+  const [adaptiveAns, setAdaptive]       = useState(null);
+  const [selected, setSel]               = useState(null);
+  const [selIntensity, setSelInt]        = useState(null);
+  const [intensities, setIntensities]    = useState({});
+  const [adaptiveIntensity, setAdaptInt] = useState(null);
   const fade = useRef(new Animated.Value(1)).current;
 
   const isAdaptive = phase === "adaptive";
@@ -739,42 +748,46 @@ function AssessmentScreen({ onComplete, onSkip }) {
     });
   }
 
-  function advance() {
+  function advanceWithLevel(level) {
     if (selected === null) return;
-
     if (!isAdaptive && qIdx === 0) {
       setAnswers(prev => ({ ...prev, 0: selected }));
-      animNext(() => { setPhase("adaptive"); setSel(null); });
+      setIntensities(prev => ({ ...prev, 0: level }));
+      animNext(() => { setPhase("adaptive"); setSel(null); setSelInt(null); });
       return;
     }
-
     if (isAdaptive) {
       setAdaptive(selected);
-      animNext(() => { setPhase("main"); setQIdx(1); setSel(null); });
+      setAdaptInt(level);
+      animNext(() => { setPhase("main"); setQIdx(1); setSel(null); setSelInt(null); });
       return;
     }
-
     const next = { ...answers, [qIdx]: selected };
+    const nextInt = { ...intensities, [qIdx]: level };
     setAnswers(next);
-
+    setIntensities(nextInt);
     if (qIdx === QUESTIONS.length - 1) {
-      onComplete(next, adaptiveAns);
+      onComplete(next, adaptiveAns, nextInt, level);
       return;
     }
-    animNext(() => { setQIdx(i => i + 1); setSel(null); });
+    animNext(() => { setQIdx(i => i + 1); setSel(null); setSelInt(null); });
+  }
+
+  function advance() {
+    if (selIntensity !== null) advanceWithLevel(selIntensity);
   }
 
   function goBack() {
     if (isAdaptive) {
-      animNext(() => { setPhase("main"); setQIdx(0); setSel(answers[0] ?? null); });
+      animNext(() => { setPhase("main"); setQIdx(0); setSel(answers[0] ?? null); setSelInt(intensities[0] ?? null); });
       return;
     }
     if (qIdx === 1) {
-      animNext(() => { setPhase("adaptive"); setSel(adaptiveAns); });
+      animNext(() => { setPhase("adaptive"); setSel(adaptiveAns); setSelInt(adaptiveIntensity); });
       return;
     }
     if (qIdx > 0) {
-      animNext(() => { setQIdx(i => i - 1); setSel(answers[qIdx - 1] ?? null); });
+      animNext(() => { setQIdx(i => i - 1); setSel(answers[qIdx - 1] ?? null); setSelInt(intensities[qIdx - 1] ?? null); });
     }
   }
 
@@ -804,11 +817,35 @@ function AssessmentScreen({ onComplete, onSkip }) {
             <Text style={s.assessQ}>{q.question}</Text>
             <View style={s.options}>
               {q.options.map((opt, i) => (
-                <TouchableOpacity key={i} style={[s.optCard, selected === i && s.optCardSel]} onPress={() => setSel(i)} activeOpacity={0.75}>
+                <TouchableOpacity
+                  key={i}
+                  style={[s.optCard, selected === i && s.optCardSel, selected !== null && selected !== i && s.optCardDim]}
+                  onPress={() => { setSel(i); if (i !== selected) setSelInt(null); }}
+                  activeOpacity={0.75}
+                >
                   <View style={[s.optDot, selected === i && s.optDotSel]}>
                     {selected === i && <Text style={s.optCheck}>✓</Text>}
                   </View>
-                  <Text style={[s.optTxt, selected === i && s.optTxtSel]}>{opt}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.optTxt, selected === i && s.optTxtSel]}>{opt}</Text>
+                    {selected === i && (
+                      <View style={s.intRow}>
+                        <Text style={s.intRowLabel}>How much does this fit?</Text>
+                        <View style={s.intBtns}>
+                          {['A little', 'Mostly', 'Exactly me'].map((lbl, level) => (
+                            <TouchableOpacity
+                              key={level}
+                              style={[s.intBtn, selIntensity === level && s.intBtnActive]}
+                              onPress={() => { setSelInt(level); setTimeout(() => advanceWithLevel(level), 200); }}
+                              activeOpacity={0.75}
+                            >
+                              <Text style={[s.intBtnTxt, selIntensity === level && s.intBtnTxtActive]}>{lbl}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      </View>
+                    )}
+                  </View>
                 </TouchableOpacity>
               ))}
             </View>
@@ -820,7 +857,7 @@ function AssessmentScreen({ onComplete, onSkip }) {
           <GradBtn
             label={!isAdaptive && qIdx === QUESTIONS.length - 1 ? "Complete →" : "Next →"}
             onPress={advance}
-            disabled={selected === null}
+            disabled={selected === null || selIntensity === null}
             style={{ flex: canGoBack ? 2 : 1 }}
           />
         </View>
@@ -1472,8 +1509,8 @@ export default function App() {
     finally { setBusy(false); }
   }
 
-  function handleAssessmentDone(answers, adaptiveAns) {
-    const computed = computeProfile(answers, adaptiveAns);
+  function handleAssessmentDone(answers, adaptiveAns, intensities, adaptiveIntensity) {
+    const computed = computeProfile(answers, adaptiveAns, intensities, adaptiveIntensity);
     setProfile(computed);
     setAssessed(true);
     // In production: POST answers to /psychology/session
@@ -1591,13 +1628,21 @@ const s = StyleSheet.create({
   dimBadgeLbl: { color: C.violet, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
   assessQ: { color: C.text, fontSize: 22, fontFamily: "SpaceGrotesk_600SemiBold", lineHeight: 30, letterSpacing: -0.3 },
   options: { gap: 12 },
-  optCard: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 14 },
+  optCard: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "flex-start", gap: 14 },
   optCardSel: { borderColor: C.violet, backgroundColor: "rgba(106,174,120,0.12)" },
-  optDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.border, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  optCardDim: { opacity: 0.38 },
+  optDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.border, alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 },
   optDotSel: { borderColor: C.violet, backgroundColor: C.violet },
   optCheck: { color: "#fff", fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
-  optTxt: { color: C.muted, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", flex: 1, lineHeight: 22 },
+  optTxt: { color: C.muted, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
   optTxtSel: { color: C.text },
+  intRow: { marginTop: 14, paddingTop: 14, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.08)" },
+  intRowLabel: { fontSize: 10, color: C.muted, fontFamily: "SpaceGrotesk_400Regular", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 10 },
+  intBtns: { flexDirection: "row", gap: 8 },
+  intBtn: { flex: 1, paddingVertical: 10, paddingHorizontal: 4, backgroundColor: C.bg4, borderRadius: 10, borderWidth: 1, borderColor: C.border, alignItems: "center" },
+  intBtnActive: { borderColor: C.violet, backgroundColor: "rgba(106,174,120,0.18)" },
+  intBtnTxt: { fontSize: 11, color: C.muted, fontFamily: "SpaceGrotesk_400Regular" },
+  intBtnTxtActive: { color: C.text, fontFamily: "SpaceGrotesk_600SemiBold" },
   assessFooter: { flexDirection: "row", gap: 10, padding: 20, paddingBottom: 32 },
 
   // Profile
