@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import BetaSignup
+from ..models import BetaSignup, WebAssessment
 from ..security import require_admin_user
 from ..services.email import send_beta_welcome
 from ..settings import get_settings
@@ -139,3 +139,54 @@ def list_beta_signups(
 def beta_signup_count(db: Session = Depends(get_db)):
     count = db.query(BetaSignup).count()
     return {"count": count}
+
+
+# ── Web assessment submission ─────────────────────────────────────────────────
+
+class DimScore(BaseModel):
+    label: str
+    score: float
+
+
+class AssessmentSubmitRequest(BaseModel):
+    email: EmailStr
+    mode: str | None = None
+    answers: list[int | None] | None = None
+    adaptive_answer: int | None = None
+    attachment_type: str | None = None
+    dimension_scores: list[DimScore] | None = None
+
+
+@router.post("/assessment", status_code=status.HTTP_201_CREATED)
+def submit_web_assessment(body: AssessmentSubmitRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    record = WebAssessment(
+        email=body.email.lower(),
+        mode=body.mode,
+        answers=body.answers,
+        adaptive_answer=body.adaptive_answer,
+        attachment_type=body.attachment_type,
+        dimension_scores=[d.model_dump() for d in body.dimension_scores] if body.dimension_scores else None,
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    db.add(record)
+    db.commit()
+
+    # Also add to beta waitlist if not already there
+    existing = db.query(BetaSignup).filter(BetaSignup.email == body.email.lower()).first()
+    if not existing:
+        signup = BetaSignup(
+            email=body.email.lower(),
+            source="assessment",
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        )
+        try:
+            db.add(signup)
+            db.commit()
+            db.refresh(signup)
+            position = db.query(BetaSignup).filter(BetaSignup.created_at <= signup.created_at).count()
+            settings = get_settings()
+            background_tasks.add_task(_send_beta_welcome_sync, body.email, position, settings.resend_api_key)
+        except IntegrityError:
+            db.rollback()
+
+    return {"status": "ok"}

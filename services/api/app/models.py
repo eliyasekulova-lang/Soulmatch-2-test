@@ -910,3 +910,16 @@ class BetaSignup(Base):
     referral_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
     notified: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+
+class WebAssessment(Base):
+    __tablename__ = "web_assessments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    answers: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    adaptive_answer: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    attachment_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    dimension_scores: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
