@@ -19,6 +19,7 @@ from .domains.messaging import router as messaging_router
 from .domains.onboarding import router as onboarding_router
 from .domains.profile import router as profile_router
 from .domains.psychology import router as psychology_router
+from .domains.deep_assessment import router as deep_assessment_router
 from .jobs.seed_psycho_items import seed_psycho_items
 from .observability import configure_logging, init_sentry, install_audit_event_middleware, install_request_logging
 from .runtime_state import mark_startup_error, mark_startup_ok
@@ -91,6 +92,7 @@ routers = [
     billing_router,
     compliance_router,
     legal_router,
+    deep_assessment_router,
 ]
 for router in routers:
     app.include_router(router)

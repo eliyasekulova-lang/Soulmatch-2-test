@@ -59,6 +59,8 @@ services:
         sync: false          # paste price_... for the $14.99/mo CAD price in Stripe
       - key: RESEND_API_KEY
         sync: false          # paste re_... from Resend dashboard (resend.com)
+      - key: ANTHROPIC_API_KEY
+        sync: false          # paste sk-ant-... from console.anthropic.com (never commit)
 
   # ── Landing page (static site) ────────────────────────────────────────────
   - type: web

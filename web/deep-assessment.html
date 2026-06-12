@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Deep Self-Discovery — SoulMatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:    #0D1409;
+      --bg2:   #121C0E;
+      --bg3:   #192614;
+      --bg4:   #1F2D1A;
+      --green: #4E8B5F;
+      --green2:#7DB87D;
+      --gold:  #C8A045;
+      --gold2: #8A6A1E;
+      --sage:  #8BAA8D;
+      --text:  #E6DDD0;
+      --muted: #7A8A7D;
+      --error: #D97070;
+      --border:rgba(255,255,255,0.07);
+      --grad:  linear-gradient(135deg,#4E8B5F,#7DB87D);
+      --grad2: linear-gradient(135deg,#8A6A1E,#C8A045);
+    }
+
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+
+    /* ── Layout ─────────────────────────────────────────────────────── */
+    #app { display: flex; flex-direction: column; height: 100%; max-width: 700px; margin: 0 auto; }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    #header {
+      padding: 1rem 1.25rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; }
+    .logo { font-size: 1.1rem; font-weight: 700; background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-title { font-size: 0.82rem; color: var(--muted); }
+    #chapter-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--sage); }
+
+    /* Progress bar */
+    .prog-wrap { height: 3px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+    .prog-fill { height: 100%; background: var(--grad2); width: 0%; transition: width 0.6s ease; border-radius: 2px; }
+
+    /* ── Chat area ───────────────────────────────────────────────────── */
+    #chat {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    #chat::-webkit-scrollbar { width: 4px; }
+    #chat::-webkit-scrollbar-track { background: transparent; }
+    #chat::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+    .bubble {
+      max-width: 88%;
+      border-radius: 16px;
+      padding: 0.9rem 1.1rem;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      animation: fadeUp 0.25s ease;
+    }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    .bubble-ai {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+    .bubble-user {
+      background: rgba(78,139,95,0.14);
+      border: 1px solid rgba(78,139,95,0.25);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+      color: var(--text);
+    }
+
+    .cursor { display: inline-block; width: 2px; height: 1em; background: var(--sage); margin-left: 2px; animation: blink 0.9s step-end infinite; vertical-align: text-bottom; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Complete CTA */
+    #complete-cta {
+      display: none;
+      margin: 0.5rem 0;
+      padding: 0 1.25rem;
+      flex-shrink: 0;
+    }
+    .complete-card {
+      background: var(--bg3);
+      border: 1px solid rgba(200,160,69,0.3);
+      border-radius: 16px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .complete-card p { font-size: 0.88rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+    .btn-gold {
+      display: inline-block; width: 100%; padding: 0.9rem;
+      background: var(--grad2); color: #fff; border: none;
+      border-radius: 12px; font-family: inherit; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn-gold:hover { opacity: 0.9; }
+    .btn-gold:disabled { opacity: 0.45; cursor: default; }
+
+    /* ── Input area ──────────────────────────────────────────────────── */
+    #input-area {
+      padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .input-row { display: flex; gap: 0.6rem; align-items: flex-end; }
+    #msg-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.75rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text);
+      outline: none;
+      resize: none;
+      min-height: 46px;
+      max-height: 140px;
+      overflow-y: auto;
+      line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    #msg-input:focus { border-color: var(--green); }
+    #msg-input::placeholder { color: var(--muted); }
+    #send-btn {
+      width: 46px; height: 46px; flex-shrink: 0;
+      background: var(--grad);
+      border: none; border-radius: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    #send-btn:hover { opacity: 0.9; }
+    #send-btn:active { transform: scale(0.95); }
+    #send-btn:disabled { opacity: 0.4; cursor: default; }
+    #send-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .input-hint { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
+
+    /* ── INTRO SCREEN ────────────────────────────────────────────────── */
+    #intro-screen {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      z-index: 10;
+      transition: opacity 0.4s ease;
+    }
+    #intro-screen.hidden { opacity: 0; pointer-events: none; }
+    .intro-inner { max-width: 460px; width: 100%; text-align: center; }
+    .intro-logo { font-size: 1.4rem; font-weight: 700; background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 2rem; }
+    .intro-inner h1 { font-size: clamp(1.5rem, 5vw, 2rem); font-weight: 700; line-height: 1.2; margin-bottom: 0.75rem; }
+    .intro-sub { color: var(--muted); font-size: 0.92rem; line-height: 1.65; margin-bottom: 1.75rem; max-width: 400px; margin-left: auto; margin-right: auto; }
+    .chapters-preview { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 2rem; }
+    .chapter-pill { font-size: 0.75rem; color: var(--sage); background: rgba(139,170,141,0.1); border: 1px solid rgba(139,170,141,0.18); border-radius: 20px; padding: 0.3rem 0.75rem; }
+    .btn-start { display: block; width: 100%; padding: 1rem; background: var(--grad); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s; margin-bottom: 0.75rem; }
+    .btn-start:hover { opacity: 0.9; }
+    .intro-note { font-size: 0.77rem; color: var(--muted); }
+
+    /* ── PROFILE VIEW ────────────────────────────────────────────────── */
+    #profile-view {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      display: none;
+      padding: 0;
+      z-index: 20;
+    }
+    #profile-view.visible { display: block; }
+    .profile-header {
+      padding: 1.5rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      position: sticky; top: 0; background: var(--bg); z-index: 1;
+    }
+    .profile-header-logo { font-size: 1rem; font-weight: 700; background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .btn-back { background: transparent; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 0.4rem 0.85rem; font-family: inherit; font-size: 0.8rem; cursor: pointer; }
+    .btn-back:hover { color: var(--text); }
+
+    .profile-content { max-width: 680px; margin: 0 auto; padding: 1.5rem; }
+    .profile-title { font-size: 1.6rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .profile-subtitle { font-size: 0.88rem; color: var(--muted); margin-bottom: 2rem; }
+    .profile-section { margin-bottom: 2.5rem; }
+    .profile-section h2 {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: var(--sage);
+      margin-bottom: 1rem; padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-section p { font-size: 0.95rem; line-height: 1.75; color: var(--text); margin-bottom: 1em; }
+    .profile-section strong { color: var(--gold); font-weight: 600; }
+    .profile-section hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+    #profile-loading {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 60vh; gap: 1.5rem;
+    }
+    .big-spinner { width: 48px; height: 48px; border: 3px solid var(--bg3); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #profile-loading p { font-size: 0.9rem; color: var(--muted); }
+
+    @media (max-width: 480px) {
+      .bubble { max-width: 95%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── INTRO SCREEN ─────────────────────────────────────────────────────────── -->
+<div id="intro-screen">
+  <div class="intro-inner">
+    <div class="intro-logo">✦ SoulMatch</div>
+    <h1>Know Yourself,<br>Deeply</h1>
+    <p class="intro-sub">
+      A guided conversation with an AI interviewer trained in attachment theory, schema therapy, and depth psychology. 30–40 questions. A full psychological portrait of who you are.
+    </p>
+    <div class="chapters-preview">
+      <span class="chapter-pill">Present Self</span>
+      <span class="chapter-pill">Relationships</span>
+      <span class="chapter-pill">Early Life & Family</span>
+      <span class="chapter-pill">Emotional World</span>
+      <span class="chapter-pill">Self-Worth</span>
+      <span class="chapter-pill">Patterns & Shadow</span>
+    </div>
+    <button class="btn-start" onclick="startAssessment()">Begin the Assessment</button>
+    <p class="intro-note">Takes 20–30 min · Responses are private · No right or wrong answers</p>
+  </div>
+</div>
+
+<!-- ── MAIN APP ──────────────────────────────────────────────────────────────── -->
+<div id="app">
+  <div id="header">
+    <div class="header-top">
+      <span class="logo">✦ SoulMatch</span>
+      <span class="header-title">Deep Self-Discovery</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+      <span id="chapter-label">Present Self</span>
+      <span id="msg-count" style="font-size:0.72rem;color:var(--muted)">0 / ~36</span>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill" id="prog-fill"></div></div>
+  </div>
+
+  <div id="chat"></div>
+
+  <div id="complete-cta">
+    <div class="complete-card">
+      <p>The assessment is complete. Your psychological profile is ready to be generated — a detailed portrait of who you are, your patterns, wounds, strengths, and growing edges.</p>
+      <button class="btn-gold" id="gen-btn" onclick="generateProfile()">Generate My Psychological Profile →</button>
+    </div>
+  </div>
+
+  <div id="input-area">
+    <div class="input-row">
+      <textarea id="msg-input" placeholder="Share openly — there are no wrong answers…" rows="1" onkeydown="onKeyDown(event)" oninput="autoResize(this)"></textarea>
+      <button id="send-btn" onclick="sendMessage()" disabled>
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+    <p class="input-hint">Press Enter to send · Shift+Enter for new line</p>
+  </div>
+</div>
+
+<!-- ── PROFILE VIEW ──────────────────────────────────────────────────────────── -->
+<div id="profile-view">
+  <div class="profile-header">
+    <span class="profile-header-logo">✦ SoulMatch</span>
+    <button class="btn-back" onclick="closeProfile()">← Back to conversation</button>
+  </div>
+  <div class="profile-content" id="profile-content">
+    <div id="profile-loading">
+      <div class="big-spinner"></div>
+      <p>Generating your psychological profile…<br>This takes about 30 seconds.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8000'
+  : 'https://soulmatch-api.onrender.com';
+
+const CHAPTERS = [
+  { label: 'Present Self',         threshold: 0  },
+  { label: 'Relational World',     threshold: 10 },
+  { label: 'Early Life & Family',  threshold: 20 },
+  { label: 'Emotional Landscape',  threshold: 30 },
+  { label: 'Self & Worth',         threshold: 42 },
+  { label: 'Patterns & Shadow',    threshold: 52 },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let conversation = [];  // { role: 'user'|'assistant', content: string }
+let assessmentComplete = false;
+let responding = false;
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+async function startAssessment() {
+  const intro = document.getElementById('intro-screen');
+  intro.classList.add('hidden');
+  setTimeout(() => { intro.style.display = 'none'; }, 400);
+
+  document.getElementById('msg-input').disabled = false;
+  // Kick off the first AI message with the opening turn
+  conversation = [{ role: 'user', content: '__START__' }];
+  await fetchAIResponse();
+  // Remove the hidden start message from the log — it's internal only
+  conversation = conversation.slice(1);
+}
+
+// ── SEND ──────────────────────────────────────────────────────────────────────
+async function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text || responding || assessmentComplete) return;
+
+  input.value = '';
+  input.style.height = '';
+  setInputEnabled(false);
+
+  conversation.push({ role: 'user', content: text });
+  addBubble('user', text);
+  scrollBottom();
+
+  await fetchAIResponse();
+}
+
+function onKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = '';
+  el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  document.getElementById('send-btn').disabled = !el.value.trim() || responding || assessmentComplete;
+}
+
+// ── FETCH AI RESPONSE (streaming SSE) ────────────────────────────────────────
+async function fetchAIResponse() {
+  responding = true;
+  setInputEnabled(false);
+
+  const bubble = addBubble('assistant', '');
+  const textEl = bubble.querySelector('.msg-text');
+  textEl.innerHTML = '<span class="cursor"></span>';
+  scrollBottom();
+
+  let aiText = '';
+
+  try {
+    const res = await fetch(API_BASE + '/deep-assessment/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: conversation }),
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') { reader.cancel(); break; }
+
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed.text) {
+            // Filter out the internal completion token from display
+            const visible = parsed.text.replace('[ASSESSMENT_COMPLETE]', '');
+            aiText += visible;
+            textEl.innerHTML = formatAIText(aiText) + '<span class="cursor"></span>';
+            scrollBottom();
+          }
+          if (parsed.event === 'complete') {
+            assessmentComplete = true;
+          }
+          if (parsed.error) {
+            textEl.textContent = 'Something went wrong: ' + parsed.error;
+          }
+        } catch {}
+      }
+    }
+
+  } catch (err) {
+    aiText = 'I had trouble connecting. Please check your internet connection and try again.';
+    textEl.textContent = aiText;
+  }
+
+  // Remove cursor, save to history
+  textEl.innerHTML = formatAIText(aiText.replace('[ASSESSMENT_COMPLETE]', '').trim());
+  conversation.push({ role: 'assistant', content: aiText.replace('[ASSESSMENT_COMPLETE]', '').trim() });
+
+  responding = false;
+  updateProgress();
+
+  if (assessmentComplete) {
+    showCompleteCTA();
+  } else {
+    setInputEnabled(true);
+    document.getElementById('msg-input').focus();
+  }
+}
+
+// ── UI HELPERS ────────────────────────────────────────────────────────────────
+function addBubble(role, text) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'bubble bubble-' + (role === 'user' ? 'user' : 'ai');
+  div.innerHTML = `<span class="msg-text">${role === 'user' ? escapeHtml(text) : formatAIText(text)}</span>`;
+  chat.appendChild(div);
+  return div;
+}
+
+function formatAIText(text) {
+  // Light markdown: **bold**, line breaks
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n+/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^(.*)$/s, '<p>$1</p>');
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function scrollBottom() {
+  const chat = document.getElementById('chat');
+  requestAnimationFrame(() => { chat.scrollTop = chat.scrollHeight; });
+}
+
+function setInputEnabled(enabled) {
+  const input = document.getElementById('msg-input');
+  const btn   = document.getElementById('send-btn');
+  input.disabled = !enabled;
+  btn.disabled   = !enabled || !input.value.trim();
+}
+
+function updateProgress() {
+  // Count turns (user+AI pairs)
+  const turns = Math.floor(conversation.length / 2);
+  const TOTAL_EXPECTED = 36;
+  const pct = Math.min(100, Math.round((turns / TOTAL_EXPECTED) * 100));
+
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('msg-count').textContent = turns + ' / ~' + TOTAL_EXPECTED;
+
+  // Chapter label based on message count
+  const msgCount = conversation.length;
+  let chapter = CHAPTERS[0];
+  for (const c of CHAPTERS) {
+    if (msgCount >= c.threshold) chapter = c;
+  }
+  document.getElementById('chapter-label').textContent = chapter.label;
+}
+
+function showCompleteCTA() {
+  document.getElementById('complete-cta').style.display = 'block';
+  document.getElementById('input-area').style.display = 'none';
+  scrollBottom();
+}
+
+// ── PROFILE GENERATION ────────────────────────────────────────────────────────
+async function generateProfile() {
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('gen-btn').textContent = 'Generating…';
+
+  const view = document.getElementById('profile-view');
+  view.classList.add('visible');
+
+  try {
+    const res = await fetch(API_BASE + '/deep-assessment/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: conversation }),
+    });
+
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    renderProfile(data.profile);
+  } catch (err) {
+    document.getElementById('profile-loading').innerHTML =
+      '<p style="color:var(--error);text-align:center">Something went wrong generating your profile.<br>Please try again.</p>' +
+      '<button class="btn-back" onclick="document.getElementById(\'profile-view\').classList.remove(\'visible\')">Go back</button>';
+  }
+}
+
+function renderProfile(markdown) {
+  const content = document.getElementById('profile-content');
+
+  // Parse sections
+  const sections = [];
+  let current = null;
+  const lines = markdown.split('\n');
+
+  for (const line of lines) {
+    if (line.startsWith('## ')) {
+      if (current) sections.push(current);
+      current = { title: line.slice(3).trim(), body: '' };
+    } else if (line.trim() === '---') {
+      // Section divider — handled in CSS
+    } else if (current) {
+      current.body += line + '\n';
+    }
+  }
+  if (current) sections.push(current);
+
+  let html = `
+    <div class="profile-title">Your Psychological Profile</div>
+    <div class="profile-subtitle">Generated from your self-discovery conversation · Private to you</div>
+  `;
+
+  for (const sec of sections) {
+    const body = sec.body.trim()
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      .replace(/\n\n+/g,'</p><p>')
+      .replace(/\n/g,'<br>');
+
+    html += `
+      <div class="profile-section">
+        <h2>${escapeHtml(sec.title)}</h2>
+        <p>${body}</p>
+      </div>
+    `;
+  }
+
+  content.innerHTML = html;
+  content.scrollTop = 0;
+}
+
+function closeProfile() {
+  document.getElementById('profile-view').classList.remove('visible');
+}
+</script>
+</body>
+</html>
