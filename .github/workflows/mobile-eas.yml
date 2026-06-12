@@ -1,17 +1,27 @@
 name: Mobile EAS Build and Submit
 
 on:
+  # Manual trigger only — add EXPO_TOKEN to repo secrets before enabling push builds
   workflow_dispatch:
     inputs:
+      platform:
+        description: "Platform to build (all | ios | android)"
+        required: true
+        default: "all"
+        type: choice
+        options: ["all", "ios", "android"]
+      profile:
+        description: "EAS build profile"
+        required: true
+        default: "production"
+        type: choice
+        options: ["production", "preview"]
       submit:
-        description: "Submit to stores after build"
+        description: "Submit to stores after build?"
         required: true
         default: "false"
-  push:
-    branches: ["main"]
-    paths:
-      - "apps/mobile/**"
-      - ".github/workflows/mobile-eas.yml"
+        type: choice
+        options: ["true", "false"]
 
 jobs:
   eas-build:
@@ -33,11 +43,10 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_ENV: production
           EXPO_PUBLIC_API_BASE_URL: ${{ secrets.PROD_API_BASE_URL }}
-        run: eas build --platform all --profile production --non-interactive
+        run: eas build --platform ${{ github.event.inputs.platform }} --profile ${{ github.event.inputs.profile }} --non-interactive
       - name: EAS Submit
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.submit == 'true'
+        if: github.event.inputs.submit == 'true'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          eas submit --platform ios --profile production --non-interactive
-          eas submit --platform android --profile production --non-interactive
+          eas submit --platform ${{ github.event.inputs.platform }} --profile ${{ github.event.inputs.profile }} --non-interactive

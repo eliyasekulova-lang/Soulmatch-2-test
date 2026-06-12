@@ -30,6 +30,10 @@ class Settings:
     auth_rate_limit_per_minute: int
     auth_refresh_rate_limit_per_minute: int
     message_send_rate_limit_per_minute: int
+    stripe_secret_key: str
+    stripe_webhook_secret: str
+    stripe_premium_price_id: str
+    resend_api_key: str
 
 
 def get_settings() -> Settings:
@@ -116,4 +120,8 @@ def get_settings() -> Settings:
         auth_rate_limit_per_minute=int(os.getenv("AUTH_RATE_LIMIT_PER_MINUTE", "25")),
         auth_refresh_rate_limit_per_minute=int(os.getenv("AUTH_REFRESH_RATE_LIMIT_PER_MINUTE", "15")),
         message_send_rate_limit_per_minute=int(os.getenv("MESSAGE_SEND_RATE_LIMIT_PER_MINUTE", "30")),
+        stripe_secret_key=os.getenv("STRIPE_SECRET_KEY", "").strip(),
+        stripe_webhook_secret=os.getenv("STRIPE_WEBHOOK_SECRET", "").strip(),
+        stripe_premium_price_id=os.getenv("STRIPE_PREMIUM_PRICE_ID", "").strip(),
+        resend_api_key=os.getenv("RESEND_API_KEY", "").strip(),
     )

@@ -1,8 +1,9 @@
+import asyncio
 import logging
 import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -10,6 +11,8 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import BetaSignup
 from ..security import require_admin_user
+from ..services.email import send_beta_welcome
+from ..settings import get_settings
 
 logger = logging.getLogger("soulmatch.beta")
 
@@ -56,8 +59,12 @@ class BetaSignupRow(BaseModel):
     model_config = {"from_attributes": True}
 
 
+def _send_beta_welcome_sync(to: str, position: int, api_key: str) -> None:
+    asyncio.run(send_beta_welcome(to=to, position=position, resend_api_key=api_key))
+
+
 @router.post("/signup", response_model=BetaSignupResponse, status_code=status.HTTP_201_CREATED)
-def beta_signup(body: BetaSignupRequest, db: Session = Depends(get_db)):
+def beta_signup(body: BetaSignupRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     existing = db.query(BetaSignup).filter(BetaSignup.email == body.email.lower()).first()
     if existing:
         position = db.query(BetaSignup).filter(BetaSignup.created_at <= existing.created_at).count()
@@ -89,6 +96,10 @@ def beta_signup(body: BetaSignupRequest, db: Session = Depends(get_db)):
 
     position = db.query(BetaSignup).filter(BetaSignup.created_at <= signup.created_at).count()
     logger.info("beta_signup", extra={"email_domain": body.email.split("@")[-1], "source": body.source})
+
+    settings = get_settings()
+    background_tasks.add_task(_send_beta_welcome_sync, body.email, position, settings.resend_api_key)
+
     return BetaSignupResponse(
         status="success",
         message="You're on the list! We'll reach out when your spot opens.",

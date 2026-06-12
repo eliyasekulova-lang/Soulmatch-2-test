@@ -2,19 +2,89 @@
   "expo": {
     "name": "SoulMatch",
     "slug": "soulmatch",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "scheme": "soulmatch",
     "assetBundlePatterns": ["**/*"],
+    "description": "Match based on who you actually are. SoulMatch uses a deep psychology assessment — attachment style, values, communication patterns — to find your most compatible romantic partners and closest friendships.",
+    "keywords": ["dating", "relationships", "psychology", "compatibility", "personality", "attachment style", "friendship"],
+    "primaryColor": "#7B2FBE",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0B0E14"
+    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.soulmatch.app"
+      "bundleIdentifier": "com.soulmatch.app",
+      "buildNumber": "1",
+      "requireFullScreen": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "SoulMatch uses your camera to let you add a profile photo so matches can see who you are.",
+        "NSPhotoLibraryUsageDescription": "SoulMatch accesses your photo library so you can choose a profile photo from your existing photos.",
+        "NSPhotoLibraryAddUsageDescription": "SoulMatch saves profile photos to your photo library when you request it.",
+        "NSLocationWhenInUseUsageDescription": "SoulMatch uses your location to show you compatible people nearby. Location is never shared with other users without your permission.",
+        "NSUserNotificationUsageDescription": "SoulMatch sends you notifications when you have a new match or message.",
+        "CFBundleAllowMixedLocalizations": true
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
+      },
+      "appStoreUrl": "https://apps.apple.com/app/soulmatch/id0000000000"
     },
     "android": {
       "package": "com.soulmatch.app",
+      "versionCode": 1,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0B0E14"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.soulmatch.app"
+    },
+    "notification": {
+      "icon": "./assets/notification-icon.png",
+      "color": "#7B2FBE",
+      "androidMode": "default"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SoulMatch accesses your photos to let you set a profile picture.",
+          "cameraPermission": "SoulMatch uses your camera to take a profile photo."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SoulMatch uses your location to show you compatible people nearby."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
       }
-    }
+    },
+    "owner": "soulmatch"
   }
 }

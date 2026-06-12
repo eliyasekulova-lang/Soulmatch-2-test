@@ -51,6 +51,14 @@ services:
         value: production
       - key: SEED_DEMO_CANDIDATES
         value: "false"
+      - key: STRIPE_SECRET_KEY
+        sync: false          # paste sk_live_... from Stripe dashboard (never commit)
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false          # paste whsec_... from Stripe webhook endpoint settings
+      - key: STRIPE_PREMIUM_PRICE_ID
+        sync: false          # paste price_... for the $14.99/mo CAD price in Stripe
+      - key: RESEND_API_KEY
+        sync: false          # paste re_... from Resend dashboard (resend.com)
 
   # ── Landing page (static site) ────────────────────────────────────────────
   - type: web
