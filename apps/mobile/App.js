@@ -4,6 +4,7 @@ import {
   Dimensions,
   FlatList,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -1120,10 +1121,11 @@ const DIM_DESCRIPTIONS = [
   "What you're ultimately hoping to build in a relationship, and on what timeline.",
 ];
 
-function ReportsScreen({ user, profile, assessed, onBack, onAssess }) {
+function ReportsScreen({ user, profile, assessed, onBack, onAssess, isPremium, onUpgrade }) {
   const dims = profile?.dimensions || DIM_LABELS.map((label, i) => ({ label, score: 65, color: DIM_COLORS[i] }));
   const avg  = Math.round(dims.reduce((a, d) => a + d.score, 0) / dims.length);
   const at   = profile?.attachmentType || "secure";
+  const FREE_DIMS = 3;
 
   return (
     <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
@@ -1154,8 +1156,8 @@ function ReportsScreen({ user, profile, assessed, onBack, onAssess }) {
             <Text style={[s.body, { marginTop: 8 }]}>{ATTACHMENT_INSIGHTS[at]}</Text>
           </View>
 
-          {/* All 12 dimensions */}
-          {dims.map((d, i) => (
+          {/* Dimensions — first 3 free, rest premium */}
+          {dims.slice(0, isPremium ? 12 : FREE_DIMS).map((d, i) => (
             <View key={i} style={s.reportDimCard}>
               <View style={s.reportDimHdr}>
                 <Text style={s.reportDimName}>{d.label}</Text>
@@ -1165,6 +1167,18 @@ function ReportsScreen({ user, profile, assessed, onBack, onAssess }) {
               <Text style={s.reportDimDesc}>{DIM_DESCRIPTIONS[i]}</Text>
             </View>
           ))}
+
+          {/* Paywall gate for remaining 9 dimensions */}
+          {!isPremium && (
+            <View style={s.reportPaywallCard}>
+              <Text style={{ fontSize: 32, textAlign: "center" }}>🔒</Text>
+              <Text style={s.reportPaywallTitle}>9 more dimensions locked</Text>
+              <Text style={s.reportPaywallSub}>
+                See your full breakdown — Conflict Approach, Vulnerability Comfort, Love Language, and 6 more — plus how each dimension shapes your compatibility.
+              </Text>
+              <GradBtn label="Unlock full report →" onPress={onUpgrade} style={{ marginTop: 4 }} />
+            </View>
+          )}
 
           <View style={[s.card, { marginTop: 8 }]}>
             <Text style={[s.muted, { textAlign: "center", fontSize: 12, lineHeight: 18 }]}>
@@ -1178,7 +1192,7 @@ function ReportsScreen({ user, profile, assessed, onBack, onAssess }) {
 }
 
 // ── 10. SETTINGS ───────────────────────────────────────────────────────────────
-function SettingsScreen({ user, onBack, onSignOut }) {
+function SettingsScreen({ user, onBack, onSignOut, isPremium, onUpgrade, onManageSub }) {
   const [notifs, setNotifs] = useState(true);
   const SettingsRow = ({ label, value, onPress, danger }) => (
     <TouchableOpacity style={s.settRow} onPress={onPress}>
@@ -1210,18 +1224,36 @@ function SettingsScreen({ user, onBack, onSignOut }) {
           </View>
 
           <Text style={s.settSection}>Subscription</Text>
-          <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.subCard}>
-            <Text style={s.subTitle}>SoulMatch Premium</Text>
-            <Text style={s.subSub}>Unlimited matches · Full compatibility reports · Priority listing</Text>
-            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, marginTop: 8 }}>
-              <Text style={s.subPrice}>$14.99</Text>
-              <Text style={s.subPer}>/month</Text>
+          {isPremium ? (
+            <View style={s.card}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={{ width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ fontSize: 18 }}>✦</Text>
+                </LinearGradient>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" }}>SoulMatch Premium</Text>
+                  <Text style={{ color: C.teal, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" }}>Active ✓</Text>
+                </View>
+              </View>
+              <View style={s.divider} />
+              <SettingsRow label="Manage subscription" onPress={onManageSub} />
             </View>
-            <TouchableOpacity style={s.subBtn}>
-              <Text style={s.subBtnTxt}>Upgrade to Premium</Text>
-            </TouchableOpacity>
-          </LinearGradient>
-          <View style={s.card}><SettingsRow label="Current plan" value="Beta (Free)" /></View>
+          ) : (
+            <>
+              <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.subCard}>
+                <Text style={s.subTitle}>SoulMatch Premium</Text>
+                <Text style={s.subSub}>Full compatibility reports · Unlimited matches · Priority listing</Text>
+                <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, marginTop: 8 }}>
+                  <Text style={s.subPrice}>$14.99</Text>
+                  <Text style={s.subPer}>/month</Text>
+                </View>
+                <TouchableOpacity style={s.subBtn} onPress={onUpgrade}>
+                  <Text style={s.subBtnTxt}>Upgrade to Premium</Text>
+                </TouchableOpacity>
+              </LinearGradient>
+              <View style={s.card}><SettingsRow label="Current plan" value="Beta (Free)" /></View>
+            </>
+          )}
 
           <Text style={s.settSection}>Legal & privacy</Text>
           <View style={s.card}>
@@ -1240,24 +1272,162 @@ function SettingsScreen({ user, onBack, onSignOut }) {
   );
 }
 
+// ── 11. PAYWALL ────────────────────────────────────────────────────────────────
+const PAYWALL_FEATURES = [
+  { icon: "📊", title: "Full psychological breakdown", sub: "All 12 dimensions explained — see exactly what drives your compatibility." },
+  { icon: "💕", title: "Unlimited matches", sub: "See every compatible person, ranked by your psychological profile." },
+  { icon: "⚡", title: "Priority listing", sub: "Appear higher in your matches' discovery feed." },
+];
+
+const PAYWALL_HEADLINES = {
+  reports:  "Unlock your full psychological report",
+  matches:  "See your complete match list",
+  general:  "Unlock everything",
+};
+
+function PaywallScreen({ context = "general", onBack, onCheckout, busy, error }) {
+  const headline = PAYWALL_HEADLINES[context] || PAYWALL_HEADLINES.general;
+  return (
+    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+      <StatusBar style="light" />
+      <SafeAreaView style={s.fill}>
+        <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
+          <TouchableOpacity onPress={onBack} style={{ padding: 8 }}>
+            <Text style={{ color: C.muted, fontSize: 20, lineHeight: 22 }}>✕</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView contentContainerStyle={s.paywallScroll} showsVerticalScrollIndicator={false}>
+          {/* Logo */}
+          <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.paywallLogoBox}>
+            <Text style={{ fontSize: 38, color: "#fff" }}>✦</Text>
+          </LinearGradient>
+
+          {/* Headline */}
+          <View style={{ alignItems: "center", gap: 6 }}>
+            <Text style={{ color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 1.2, textTransform: "uppercase" }}>
+              SoulMatch Premium
+            </Text>
+            <Text style={s.paywallHeadline}>{headline}</Text>
+          </View>
+
+          {/* Feature cards */}
+          <View style={{ width: "100%", gap: 10 }}>
+            {PAYWALL_FEATURES.map((f, i) => (
+              <View key={i} style={s.paywallFeatureCard}>
+                <Text style={{ fontSize: 26, flexShrink: 0 }}>{f.icon}</Text>
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={{ color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" }}>{f.title}</Text>
+                  <Text style={{ color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 18 }}>{f.sub}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Price */}
+          <View style={{ alignItems: "center", gap: 4 }}>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4 }}>
+              <Text style={s.paywallPrice}>$14.99</Text>
+              <Text style={{ color: C.muted, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", paddingBottom: 6 }}>/month</Text>
+            </View>
+            <Text style={{ color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" }}>Cancel any time · No commitment</Text>
+          </View>
+
+          {/* CTA */}
+          {error ? <Text style={[s.errMsg, { textAlign: "center" }]}>{error}</Text> : null}
+          <GradBtn
+            label={busy ? "Opening checkout…" : "Start Premium →"}
+            onPress={onCheckout}
+            disabled={busy}
+            style={{ width: "100%", marginTop: 4 }}
+          />
+          <TouchableOpacity onPress={onBack} style={{ alignSelf: "center", padding: 12 }}>
+            <Text style={{ color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" }}>Maybe later</Text>
+          </TouchableOpacity>
+
+          <Text style={{ color: "rgba(255,255,255,0.18)", fontSize: 11, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", lineHeight: 18 }}>
+            Payment processed securely by Stripe.{"\n"}Your subscription starts immediately after checkout.
+          </Text>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
+  );
+}
+
 // ── ROOT APP ───────────────────────────────────────────────────────────────────
 export default function App() {
   const [fontsLoaded] = useFonts({ SpaceGrotesk_400Regular, SpaceGrotesk_600SemiBold });
-  const [screen, setScreen]       = useState("splash");
-  const [navParam, setNavParam]   = useState(null);
-  const [user, setUser]           = useState(null);
-  const [authToken, setToken]     = useState("");
-  const [busy, setBusy]           = useState(false);
-  const [authError, setAuthErr]   = useState("");
-  const [mode, setMode]           = useState("romance");
-  const [matches, setMatches]     = useState([]);
-  const [messages, setMessages]   = useState({});
-  const [profile, setProfile]     = useState(null);
-  const [assessed, setAssessed]   = useState(false);
+  const [screen, setScreen]         = useState("splash");
+  const [navParam, setNavParam]     = useState(null);
+  const [user, setUser]             = useState(null);
+  const [authToken, setToken]       = useState("");
+  const [busy, setBusy]             = useState(false);
+  const [authError, setAuthErr]     = useState("");
+  const [mode, setMode]             = useState("romance");
+  const [matches, setMatches]       = useState([]);
+  const [messages, setMessages]     = useState({});
+  const [profile, setProfile]       = useState(null);
+  const [assessed, setAssessed]     = useState(false);
+  // Beta: all users get premium access for free during the beta period.
+  // Set to false when monetization goes live (Phase 5 production).
+  const [isPremium, setIsPremium]   = useState(true);
+  const [checkoutBusy, setCkBusy]   = useState(false);
+  const [checkoutError, setCkErr]   = useState("");
 
   if (!fontsLoaded) return null;
 
   function nav(s, p = null) { setNavParam(p); setScreen(s); }
+
+  async function checkSubscription(token) {
+    if (!token) return;
+    try {
+      const res = await apiRequest("GET", "/billing/subscription", null, token);
+      if (res.ok && res.body?.active_subscription?.status === "active") setIsPremium(true);
+    } catch (_) {}
+  }
+
+  async function openCheckout() {
+    if (!authToken) { nav("login"); return; }
+    setCkBusy(true); setCkErr("");
+    try {
+      const res = await apiRequest("POST", "/billing/checkout-session", {
+        product_code: "premium_monthly",
+        success_url: "soulmatch://billing/success",
+        cancel_url: "soulmatch://billing/cancel",
+      }, authToken);
+      if (res.ok && res.body?.checkout_url) {
+        await Linking.openURL(res.body.checkout_url);
+      } else {
+        setCkErr(normalizeError(res.body, "Checkout failed — try again"));
+      }
+    } catch (e) {
+      setCkErr(normalizeError(e, "Could not open checkout"));
+    } finally {
+      setCkBusy(false);
+    }
+  }
+
+  async function openPortal() {
+    if (!authToken) return;
+    try {
+      const res = await apiRequest("POST", "/billing/portal", null, authToken);
+      if (res.ok && res.body?.portal_url) await Linking.openURL(res.body.portal_url);
+    } catch (_) {}
+  }
+
+  function goPaywall(context = "general") {
+    nav("paywall", { context, from: screen });
+  }
+
+  // Handle Stripe deep link return (soulmatch://billing/success)
+  useEffect(() => {
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      if (url?.includes("billing/success")) {
+        checkSubscription(authToken);
+        nav("profile");
+      }
+    });
+    return () => sub.remove();
+  }, [authToken]);
 
   async function login(email, password) {
     setBusy(true); setAuthErr("");
@@ -1266,6 +1436,7 @@ export default function App() {
       if (!res.ok) { setAuthErr(normalizeError(res.body, "Login failed")); return; }
       setToken(res.body.access_token);
       setUser({ id: res.body.user_id, name: res.body.name || email.split("@")[0], email });
+      checkSubscription(res.body.access_token);
       nav("profile");
     } catch (e) { setAuthErr(normalizeError(e, "Network error")); }
     finally { setBusy(false); }
@@ -1285,6 +1456,7 @@ export default function App() {
       } else { setAuthErr(normalizeError(r.body, "Registration failed")); return; }
 
       setToken(auth.access_token);
+      checkSubscription(auth.access_token);
       await apiRequest("POST", "/legal/consent", { accept: true }, auth.access_token);
       await apiRequest("POST", "/users", {
         id: auth.user_id, name, email,
@@ -1334,16 +1506,17 @@ export default function App() {
     nav("login");
   }
 
-  if (screen === "splash")    return <SplashScreen onDone={() => nav("login")} />;
-  if (screen === "login")     return <LoginScreen onLogin={login} onGoRegister={() => { setAuthErr(""); nav("register"); }} error={authError} busy={busy} />;
-  if (screen === "register")  return <RegisterScreen onComplete={register} onGoLogin={() => { setAuthErr(""); nav("login"); }} error={authError} busy={busy} />;
-  if (screen === "assessment") return <AssessmentScreen onComplete={handleAssessmentDone} onSkip={() => nav("profile")} />;
-  if (screen === "profile")   return <ProfileScreen user={user} profile={profile} assessed={assessed} onAssess={() => nav("assessment")} onReports={() => nav("reports")} onMatches={() => { nav("discovery"); loadMatches(); }} onSettings={() => nav("settings")} />;
-  if (screen === "discovery") return <DiscoveryScreen matches={matches} mode={mode} onModeChange={m => { setMode(m); loadMatches(m); }} onViewMatch={(m, md) => nav("match_detail", { match: m, mode: md || mode })} onProfile={() => nav("profile")} busy={busy} userProfile={profile} />;
+  if (screen === "splash")      return <SplashScreen onDone={() => nav("login")} />;
+  if (screen === "login")       return <LoginScreen onLogin={login} onGoRegister={() => { setAuthErr(""); nav("register"); }} error={authError} busy={busy} />;
+  if (screen === "register")    return <RegisterScreen onComplete={register} onGoLogin={() => { setAuthErr(""); nav("login"); }} error={authError} busy={busy} />;
+  if (screen === "assessment")  return <AssessmentScreen onComplete={handleAssessmentDone} onSkip={() => nav("profile")} />;
+  if (screen === "profile")     return <ProfileScreen user={user} profile={profile} assessed={assessed} onAssess={() => nav("assessment")} onReports={() => nav("reports")} onMatches={() => { nav("discovery"); loadMatches(); }} onSettings={() => nav("settings")} />;
+  if (screen === "discovery")   return <DiscoveryScreen matches={matches} mode={mode} onModeChange={m => { setMode(m); loadMatches(m); }} onViewMatch={(m, md) => nav("match_detail", { match: m, mode: md || mode })} onProfile={() => nav("profile")} busy={busy} userProfile={profile} isPremium={isPremium} onUpgrade={() => goPaywall("matches")} />;
   if (screen === "match_detail") return <MatchDetailScreen match={navParam?.match} userProfile={profile} mode={navParam?.mode || mode} onBack={() => nav("discovery")} onChat={m => nav("chat", m)} />;
-  if (screen === "chat")      return <ChatScreen match={navParam} messages={messages[navParam?.id]} onSend={sendMessage} onBack={() => nav("match_detail", { match: navParam, mode })} />;
-  if (screen === "reports")   return <ReportsScreen user={user} profile={profile} assessed={assessed} onBack={() => nav("profile")} onAssess={() => nav("assessment")} />;
-  if (screen === "settings")  return <SettingsScreen user={user} onBack={() => nav("profile")} onSignOut={signOut} />;
+  if (screen === "chat")        return <ChatScreen match={navParam} messages={messages[navParam?.id]} onSend={sendMessage} onBack={() => nav("match_detail", { match: navParam, mode })} />;
+  if (screen === "reports")     return <ReportsScreen user={user} profile={profile} assessed={assessed} onBack={() => nav("profile")} onAssess={() => nav("assessment")} isPremium={isPremium} onUpgrade={() => goPaywall("reports")} />;
+  if (screen === "settings")    return <SettingsScreen user={user} onBack={() => nav("profile")} onSignOut={signOut} isPremium={isPremium} onUpgrade={() => goPaywall("general")} onManageSub={openPortal} />;
+  if (screen === "paywall")     return <PaywallScreen context={navParam?.context || "general"} onBack={() => nav(navParam?.from || "profile")} onCheckout={openCheckout} busy={checkoutBusy} error={checkoutError} />;
   return null;
 }
 
@@ -1549,4 +1722,16 @@ const s = StyleSheet.create({
   gradBtnTxt: { color: "#fff", fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
   ghostBtn: { borderRadius: 50, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center", borderWidth: 1, borderColor: C.border },
   ghostBtnTxt: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
+
+  // Reports premium gate
+  reportPaywallCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: "rgba(157,78,221,0.3)", padding: 24, alignItems: "center", gap: 10 },
+  reportPaywallTitle: { color: C.text, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold", textAlign: "center", letterSpacing: -0.2 },
+  reportPaywallSub: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", lineHeight: 22 },
+
+  // Paywall screen
+  paywallScroll: { padding: 24, alignItems: "center", gap: 24 },
+  paywallLogoBox: { width: 80, height: 80, borderRadius: 24, alignItems: "center", justifyContent: "center" },
+  paywallHeadline: { color: C.text, fontSize: 26, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.5, textAlign: "center", lineHeight: 34 },
+  paywallFeatureCard: { backgroundColor: C.bg3, borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 16, flexDirection: "row", alignItems: "flex-start", gap: 14, width: "100%" },
+  paywallPrice: { color: C.text, fontSize: 42, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -2 },
 });
