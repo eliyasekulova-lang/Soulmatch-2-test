@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import AuthUser, PsychoItem
+from ..models import AuthUser, PsychProfile, PsychoItem
 from ..security import get_current_auth_user
 from ..services.assessment_flow_service import (
     STANDARD_ASSESSMENT_MODE,
@@ -318,6 +318,80 @@ def get_my_psychology_report(
         growth_suggestions=report.growth_suggestions,
         confidence_summary=report.confidence_summary,
     )
+
+
+class DimScoreIn(BaseModel):
+    label: str
+    score: float
+
+
+class MobileSubmitRequest(BaseModel):
+    attachment_type: str
+    answers: list[int]
+    adaptive_answer: int | None = None
+    dimension_scores: list[DimScoreIn] = Field(default_factory=list)
+
+
+_CONFLICT_MAP = ["competitive", "collaborative", "compromising", "avoiding"]
+_LOVE_LANG_MAP = ["words_of_affirmation", "quality_time", "acts_of_service", "physical_touch"]
+_SOCIAL_MAP    = ["high", "balanced", "independent", "balanced"]
+_COMM_MAP      = ["direct", "reflective", "selective", "avoidant"]
+
+
+@router.post("/mobile-submit", status_code=status.HTTP_204_NO_CONTENT)
+def mobile_submit(
+    body: MobileSubmitRequest,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(get_current_auth_user),
+):
+    """Upsert PsychProfile from the mobile assessment (single-shot format)."""
+    scores = {d.label: d.score for d in body.dimension_scores}
+
+    def s(label: str) -> float:
+        return scores.get(label, 60.0)
+
+    openness       = round((s("Openness") + s("Vulnerability Comfort")) / 200, 4)
+    conscientiousness = round(s("Growth Mindset") / 100, 4)
+    extraversion   = round((100 - s("Independence Needs")) / 100, 4)
+    agreeableness  = round((s("Communication") + s("Conflict Approach")) / 200, 4)
+    neuroticism    = round((100 - s("Emotional Regulation")) / 100, 4)
+    ocean = [openness, conscientiousness, extraversion, agreeableness, neuroticism]
+
+    ans = body.answers
+    comm_style     = _COMM_MAP[ans[3]]    if len(ans) > 3  and ans[3] in range(4) else "reflective"
+    conflict_style = _CONFLICT_MAP[ans[4]] if len(ans) > 4 and ans[4] in range(4) else "collaborative"
+    social_energy  = _SOCIAL_MAP[ans[5]]  if len(ans) > 5  and ans[5] in range(4) else "balanced"
+    love_lang      = _LOVE_LANG_MAP[ans[8]] if len(ans) > 8 and ans[8] in range(4) else "quality_time"
+    novelty        = round(s("Openness") / 100, 4)
+    boundaries     = round(s("Independence Needs") / 100, 4)
+
+    existing = db.get(PsychProfile, current_user.id)
+    if existing:
+        existing.ocean_vector          = ocean
+        existing.attachment_style      = body.attachment_type or "secure"
+        existing.attachment_confidence = round(s("Attachment Style") / 100, 4)
+        existing.love_language         = love_lang
+        existing.communication_style   = comm_style
+        existing.conflict_style        = conflict_style
+        existing.social_energy         = social_energy
+        existing.novelty_preference    = novelty
+        existing.boundaries_preference = boundaries
+        existing.source_version        = "mobile_v1"
+    else:
+        db.add(PsychProfile(
+            user_id               = current_user.id,
+            ocean_vector          = ocean,
+            attachment_style      = body.attachment_type or "secure",
+            attachment_confidence = round(s("Attachment Style") / 100, 4),
+            love_language         = love_lang,
+            communication_style   = comm_style,
+            conflict_style        = conflict_style,
+            social_energy         = social_energy,
+            novelty_preference    = novelty,
+            boundaries_preference = boundaries,
+            source_version        = "mobile_v1",
+        ))
+    db.commit()
 
 
 @router.get("/report/history", response_model=PsychologyReportHistoryResponse)

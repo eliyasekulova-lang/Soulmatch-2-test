@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
+  Alert,
   Animated,
   Dimensions,
   FlatList,
@@ -476,7 +477,7 @@ function DimBar({ label, score, color }) {
     </View>
   );
 }
-function Hdr({ title, subtitle, onBack }) {
+function Hdr({ title, subtitle, onBack, rightLabel, onRight }) {
   return (
     <View style={s.hdr}>
       {onBack && (
@@ -488,6 +489,11 @@ function Hdr({ title, subtitle, onBack }) {
         <Text style={s.hdrTitle}>{title}</Text>
         {subtitle ? <Text style={s.hdrSub}>{subtitle}</Text> : null}
       </View>
+      {onRight && (
+        <TouchableOpacity onPress={onRight} style={s.hdrRight}>
+          <Text style={s.hdrRightTxt}>{rightLabel || "⋯"}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -1016,7 +1022,7 @@ function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onProfile, 
 }
 
 // ── 7. MATCH DETAIL ────────────────────────────────────────────────────────────
-function MatchDetailScreen({ match: m, userProfile, mode, onBack, onChat }) {
+function MatchDetailScreen({ match: m, userProfile, mode, onBack, onChat, onBlock, onReport }) {
   if (!m) return null;
   const dims = userProfile?.dimensions || m.dimensions;
 
@@ -1068,6 +1074,14 @@ function MatchDetailScreen({ match: m, userProfile, mode, onBack, onChat }) {
 
           <GradBtn label="Start conversation →" onPress={() => onChat(m)} style={{ marginBottom: 12 }} />
           <GhostBtn label="Not interested" onPress={onBack} />
+          <View style={s.safetyRow}>
+            <TouchableOpacity onPress={() => onBlock?.(m)} style={s.safetyBtn}>
+              <Text style={s.safetyTxt}>🚫 Block</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onReport?.(m)} style={s.safetyBtn}>
+              <Text style={s.safetyTxt}>⚑ Report</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -1075,7 +1089,7 @@ function MatchDetailScreen({ match: m, userProfile, mode, onBack, onChat }) {
 }
 
 // ── 8. CHAT ────────────────────────────────────────────────────────────────────
-function ChatScreen({ match: m, messages, onSend, onBack }) {
+function ChatScreen({ match: m, messages, onSend, onBack, onBlock, onReport }) {
   const [text, setText] = useState("");
   const listRef = useRef(null);
   const msgs = messages?.length ? messages : [
@@ -1093,7 +1107,21 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
     <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
-        <Hdr title={m?.name || "Chat"} subtitle={`${Math.round(m?.score || 0)}% compatible`} onBack={onBack} />
+        <Hdr
+          title={m?.name || "Chat"}
+          subtitle={`${Math.round(m?.score || 0)}% compatible`}
+          onBack={onBack}
+          rightLabel="⋯"
+          onRight={() => Alert.alert(
+            m?.name || "User",
+            "What would you like to do?",
+            [
+              { text: "Block this person", style: "destructive", onPress: () => onBlock?.(m) },
+              { text: "Report this person", style: "destructive", onPress: () => onReport?.(m) },
+              { text: "Cancel", style: "cancel" },
+            ]
+          )}
+        />
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.fill}>
           <FlatList
             ref={listRef}
@@ -1500,20 +1528,25 @@ export default function App() {
         birth: { date: birthDate, time: birthTime, place: selectedPlace?.label || "", latitude: selectedPlace?.latitude || 0, longitude: selectedPlace?.longitude || 0, timezone: selectedPlace?.timezone || "" },
         goals, matching_preference: pref, consent_privacy: consentP, consent_sensitive_data: consentS, policy_version: "v1",
       }, auth.access_token);
-      if (pref === "psych_behavior_astro") {
-        await apiRequest("POST", "/vectors/generate", { user_id: auth.user_id }, auth.access_token);
-      }
+      apiRequest("POST", "/vectors/generate", { user_id: auth.user_id }, auth.access_token).catch(() => {});
       setUser({ id: auth.user_id, name, email });
       nav("assessment");
     } catch (e) { setAuthErr(normalizeError(e, "Registration failed")); }
     finally { setBusy(false); }
   }
 
-  function handleAssessmentDone(answers, adaptiveAns, intensities, adaptiveIntensity) {
+  async function handleAssessmentDone(answers, adaptiveAns, intensities, adaptiveIntensity) {
     const computed = computeProfile(answers, adaptiveAns, intensities, adaptiveIntensity);
     setProfile(computed);
     setAssessed(true);
-    // In production: POST answers to /psychology/session
+    if (authToken && user?.id) {
+      apiRequest("POST", "/psychology/mobile-submit", {
+        attachment_type: computed.attachmentType,
+        answers: Object.values(answers),
+        adaptive_answer: adaptiveAns,
+        dimension_scores: computed.dimensions.map(d => ({ label: d.label, score: d.score })),
+      }, authToken).catch(() => {});
+    }
     nav("discovery");
   }
 
@@ -1538,6 +1571,35 @@ export default function App() {
     setMessages(prev => ({ ...prev, [matchId]: [...(prev[matchId] || []), { id: String(Date.now()), text, from: "me", ts }] }));
   }
 
+  function blockUser(match) {
+    if (!authToken || !match?.id) return;
+    Alert.alert("Block " + match.name + "?", "They won't be able to see your profile or message you.", [
+      {
+        text: "Block", style: "destructive", onPress: () => {
+          apiRequest("POST", "/compliance/block", { blocked_user_id: match.id, reason: "user_block" }, authToken).catch(() => {});
+          setMatches(prev => prev.filter(m => m.id !== match.id));
+          nav("discovery");
+        },
+      },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
+
+  function reportUser(match) {
+    if (!authToken || !match?.id) return;
+    Alert.alert("Report " + match.name, "Select a reason:", [
+      { text: "Inappropriate content", onPress: () => _submitReport(match.id, "inappropriate_content") },
+      { text: "Harassment or abuse", onPress: () => _submitReport(match.id, "harassment") },
+      { text: "Fake profile / spam", onPress: () => _submitReport(match.id, "fake_profile") },
+      { text: "Cancel", style: "cancel" },
+    ]);
+  }
+
+  function _submitReport(targetId, reason) {
+    apiRequest("POST", "/compliance/report", { target_user_id: targetId, reason }, authToken).catch(() => {});
+    Alert.alert("Report submitted", "Thank you — our team will review this.");
+  }
+
   function signOut() {
     setUser(null); setToken(""); setMatches([]); setProfile(null); setAssessed(false);
     nav("login");
@@ -1549,8 +1611,8 @@ export default function App() {
   if (screen === "assessment")  return <AssessmentScreen onComplete={handleAssessmentDone} onSkip={() => nav("profile")} />;
   if (screen === "profile")     return <ProfileScreen user={user} profile={profile} assessed={assessed} onAssess={() => nav("assessment")} onReports={() => nav("reports")} onMatches={() => { nav("discovery"); loadMatches(); }} onSettings={() => nav("settings")} />;
   if (screen === "discovery")   return <DiscoveryScreen matches={matches} mode={mode} onModeChange={m => { setMode(m); loadMatches(m); }} onViewMatch={(m, md) => nav("match_detail", { match: m, mode: md || mode })} onProfile={() => nav("profile")} busy={busy} userProfile={profile} isPremium={isPremium} onUpgrade={() => goPaywall("matches")} />;
-  if (screen === "match_detail") return <MatchDetailScreen match={navParam?.match} userProfile={profile} mode={navParam?.mode || mode} onBack={() => nav("discovery")} onChat={m => nav("chat", m)} />;
-  if (screen === "chat")        return <ChatScreen match={navParam} messages={messages[navParam?.id]} onSend={sendMessage} onBack={() => nav("match_detail", { match: navParam, mode })} />;
+  if (screen === "match_detail") return <MatchDetailScreen match={navParam?.match} userProfile={profile} mode={navParam?.mode || mode} onBack={() => nav("discovery")} onChat={m => nav("chat", m)} onBlock={blockUser} onReport={reportUser} />;
+  if (screen === "chat")        return <ChatScreen match={navParam} messages={messages[navParam?.id]} onSend={sendMessage} onBack={() => nav("match_detail", { match: navParam, mode })} onBlock={blockUser} onReport={reportUser} />;
   if (screen === "reports")     return <ReportsScreen user={user} profile={profile} assessed={assessed} onBack={() => nav("profile")} onAssess={() => nav("assessment")} isPremium={isPremium} onUpgrade={() => goPaywall("reports")} />;
   if (screen === "settings")    return <SettingsScreen user={user} onBack={() => nav("profile")} onSignOut={signOut} isPremium={isPremium} onUpgrade={() => goPaywall("general")} onManageSub={openPortal} />;
   if (screen === "paywall")     return <PaywallScreen context={navParam?.context || "general"} onBack={() => nav(navParam?.from || "profile")} onCheckout={openCheckout} busy={checkoutBusy} error={checkoutError} />;
@@ -1760,6 +1822,11 @@ const s = StyleSheet.create({
   backIcon: { color: C.text, fontSize: 18, marginLeft: -2 },
   hdrTitle: { color: C.text, fontSize: 20, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -0.3 },
   hdrSub: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
+  hdrRight: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center" },
+  hdrRightTxt: { color: C.muted, fontSize: 18, lineHeight: 22 },
+  safetyRow: { flexDirection: "row", justifyContent: "center", gap: 32, marginTop: 8, marginBottom: 20 },
+  safetyBtn: { paddingVertical: 8, paddingHorizontal: 12 },
+  safetyTxt: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
   body: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_400Regular", lineHeight: 22 },
   muted: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
   errMsg: { color: C.error, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
