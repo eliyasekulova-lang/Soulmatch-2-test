@@ -1528,7 +1528,9 @@ export default function App() {
         birth: { date: birthDate, time: birthTime, place: selectedPlace?.label || "", latitude: selectedPlace?.latitude || 0, longitude: selectedPlace?.longitude || 0, timezone: selectedPlace?.timezone || "" },
         goals, matching_preference: pref, consent_privacy: consentP, consent_sensitive_data: consentS, policy_version: "v1",
       }, auth.access_token);
-      apiRequest("POST", "/vectors/generate", { user_id: auth.user_id }, auth.access_token).catch(() => {});
+      if (pref === "psych_behavior_astro") {
+        apiRequest("POST", "/vectors/generate", { user_id: auth.user_id }, auth.access_token).catch(() => {});
+      }
       setUser({ id: auth.user_id, name, email });
       nav("assessment");
     } catch (e) { setAuthErr(normalizeError(e, "Registration failed")); }
