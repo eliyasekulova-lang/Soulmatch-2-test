@@ -29,11 +29,11 @@ const { width: W } = Dimensions.get("window");
 
 // ── COLORS ─────────────────────────────────────────────────────────────────────
 const C = {
-  bg: "#0B0E14", bg2: "#10141E", bg3: "#161B27", bg4: "#1C2233",
-  purple: "#7B2FBE", violet: "#9D4EDD", pink: "#E040FB",
-  teal: "#00C9C8", gold: "#FFD700", green: "#40FB82",
-  text: "#F0F0F8", muted: "#8A8FA8", error: "#FF6B7A",
-  border: "rgba(255,255,255,0.08)",
+  bg: "#0D1409", bg2: "#121C0E", bg3: "#192614", bg4: "#1F2D1A",
+  purple: "#4E8B5F", violet: "#6AAE78", pink: "#C8A045",
+  teal: "#8BAA8D", gold: "#C8A045", green: "#7DB87D",
+  text: "#E6DDD0", muted: "#7A8A7D", error: "#D97070",
+  border: "rgba(255,255,255,0.07)",
 };
 
 // ── PSYCHOLOGY: 12 MAIN QUESTIONS ─────────────────────────────────────────────
@@ -440,7 +440,7 @@ function validateTime(v) {
 function GradBtn({ label, onPress, disabled, style }) {
   return (
     <TouchableOpacity onPress={onPress} disabled={disabled} style={[{ opacity: disabled ? 0.4 : 1 }, style]}>
-      <LinearGradient colors={["#7B2FBE", "#E040FB"]} start={[0, 0]} end={[1, 0]} style={s.gradBtn}>
+      <LinearGradient colors={["#4E8B5F", "#7DB87D"]} start={[0, 0]} end={[1, 0]} style={s.gradBtn}>
         <Text style={s.gradBtnTxt}>{label}</Text>
       </LinearGradient>
     </TouchableOpacity>
@@ -499,10 +499,10 @@ function SplashScreen({ onDone }) {
     return () => clearTimeout(t);
   }, []);
   return (
-    <LinearGradient colors={["#0B0E14", "#0F1525", "#161B30"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#101C0C", "#142010"]} style={s.fill}>
       <StatusBar style="light" />
       <Animated.View style={[s.splashCenter, { opacity: fade, transform: [{ scale }] }]}>
-        <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.splashLogoBox}>
+        <LinearGradient colors={["#4E8B5F", "#7DB87D"]} style={s.splashLogoBox}>
           <Text style={s.splashLogoIcon}>✦</Text>
         </LinearGradient>
         <Text style={s.splashWordmark}>SoulMatch</Text>
@@ -522,7 +522,7 @@ function LoginScreen({ onLogin, onGoRegister, error, busy }) {
   const [email, setEmail]     = useState("");
   const [password, setPass]   = useState("");
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.fill}>
@@ -604,7 +604,7 @@ function RegisterScreen({ onComplete, onGoLogin, error, busy }) {
   }
 
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={s.fill}>
@@ -781,7 +781,7 @@ function AssessmentScreen({ onComplete, onSkip }) {
   const canGoBack = isAdaptive || qIdx > 0;
 
   return (
-    <LinearGradient colors={["#0B0E14", "#0F1420"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#101C0C"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <View style={s.assessHdr}>
@@ -835,7 +835,7 @@ function ProfileScreen({ user, profile, assessed, onAssess, onReports, onMatches
   const dims = profile?.dimensions || [];
 
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <ScrollView contentContainerStyle={s.profileScroll}>
@@ -844,7 +844,7 @@ function ProfileScreen({ user, profile, assessed, onAssess, onReports, onMatches
             <TouchableOpacity onPress={onSettings}><Text style={{ fontSize: 22 }}>⚙️</Text></TouchableOpacity>
           </View>
           <View style={s.avatarWrap}>
-            <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.avatar}>
+            <LinearGradient colors={["#4E8B5F", "#7DB87D"]} style={s.avatar}>
               <Text style={s.avatarTxt}>{initials}</Text>
             </LinearGradient>
             {assessed && profile && (
@@ -905,7 +905,7 @@ function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onProfile, 
   };
 
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <View style={s.discHdr}>
@@ -946,7 +946,7 @@ function DiscoveryScreen({ matches, mode, onModeChange, onViewMatch, onProfile, 
             renderItem={({ item: m }) => (
               <View style={s.matchCard}>
                 <View style={s.matchCardTop}>
-                  <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.matchAvatar}>
+                  <LinearGradient colors={["#4E8B5F", "#7DB87D"]} style={s.matchAvatar}>
                     <Text style={s.matchAvatarTxt}>{m.avatar || m.name[0]}</Text>
                   </LinearGradient>
                   <View style={{ flex: 1 }}>
@@ -987,13 +987,13 @@ function MatchDetailScreen({ match: m, userProfile, mode, onBack, onChat }) {
   const modeLabel = mode === "romance" ? "Romantic compatibility" : "Friendship compatibility";
 
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title={m.name} subtitle={`📍 ${m.city}`} onBack={onBack} />
         <ScrollView contentContainerStyle={s.detailScroll}>
           <View style={s.detailHero}>
-            <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.detailAvatar}>
+            <LinearGradient colors={["#4E8B5F", "#7DB87D"]} style={s.detailAvatar}>
               <Text style={s.detailAvatarTxt}>{m.avatar || m.name[0]}</Text>
             </LinearGradient>
             <View style={[s.detailScoreBox, { borderColor: modeColor + "44", backgroundColor: modeColor + "12" }]}>
@@ -1053,7 +1053,7 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
   }
 
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title={m?.name || "Chat"} subtitle={`${Math.round(m?.score || 0)}% compatible`} onBack={onBack} />
@@ -1069,7 +1069,7 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
               return (
                 <View style={[s.msgWrap, mine ? s.msgWrapMine : s.msgWrapThem]}>
                   {mine ? (
-                    <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.msgBubble}>
+                    <LinearGradient colors={["#4E8B5F", "#7DB87D"]} style={s.msgBubble}>
                       <Text style={s.msgTxtMine}>{msg.text}</Text>
                     </LinearGradient>
                   ) : (
@@ -1094,7 +1094,7 @@ function ChatScreen({ match: m, messages, onSend, onBack }) {
               onSubmitEditing={send}
             />
             <TouchableOpacity onPress={send} disabled={!text.trim()}>
-              <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={[s.sendBtn, !text.trim() && { opacity: 0.4 }]}>
+              <LinearGradient colors={["#4E8B5F", "#7DB87D"]} style={[s.sendBtn, !text.trim() && { opacity: 0.4 }]}>
                 <Text style={s.sendIcon}>↑</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -1128,7 +1128,7 @@ function ReportsScreen({ user, profile, assessed, onBack, onAssess, isPremium, o
   const FREE_DIMS = 3;
 
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title="My Report" subtitle="Psychological profile" onBack={onBack} />
@@ -1143,7 +1143,7 @@ function ReportsScreen({ user, profile, assessed, onBack, onAssess, isPremium, o
           )}
 
           {/* Score hero */}
-          <LinearGradient colors={["#7B2FBE22", "#E040FB11"]} style={s.reportHero}>
+          <LinearGradient colors={["#4E8B5F22", "#C8A04511"]} style={s.reportHero}>
             <Text style={s.reportHeroScore}>{avg}%</Text>
             <Text style={s.reportHeroLabel}>Average self-alignment score</Text>
             <Text style={s.reportHeroName}>{user?.name || "Your"} profile</Text>
@@ -1201,7 +1201,7 @@ function SettingsScreen({ user, onBack, onSignOut, isPremium, onUpgrade, onManag
     </TouchableOpacity>
   );
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <Hdr title="Settings" onBack={onBack} />
@@ -1227,7 +1227,7 @@ function SettingsScreen({ user, onBack, onSignOut, isPremium, onUpgrade, onManag
           {isPremium ? (
             <View style={s.card}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={{ width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
+                <LinearGradient colors={["#8A6A1E", "#C8A045"]} style={{ width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
                   <Text style={{ fontSize: 18 }}>✦</Text>
                 </LinearGradient>
                 <View style={{ flex: 1 }}>
@@ -1240,7 +1240,7 @@ function SettingsScreen({ user, onBack, onSignOut, isPremium, onUpgrade, onManag
             </View>
           ) : (
             <>
-              <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.subCard}>
+              <LinearGradient colors={["#8A6A1E", "#C8A045"]} style={s.subCard}>
                 <Text style={s.subTitle}>SoulMatch Premium</Text>
                 <Text style={s.subSub}>Full compatibility reports · Unlimited matches · Priority listing</Text>
                 <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 4, marginTop: 8 }}>
@@ -1288,7 +1288,7 @@ const PAYWALL_HEADLINES = {
 function PaywallScreen({ context = "general", onBack, onCheckout, busy, error }) {
   const headline = PAYWALL_HEADLINES[context] || PAYWALL_HEADLINES.general;
   return (
-    <LinearGradient colors={["#0B0E14", "#10141E"]} style={s.fill}>
+    <LinearGradient colors={["#0D1409", "#121C0E"]} style={s.fill}>
       <StatusBar style="light" />
       <SafeAreaView style={s.fill}>
         <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 }}>
@@ -1298,7 +1298,7 @@ function PaywallScreen({ context = "general", onBack, onCheckout, busy, error })
         </View>
         <ScrollView contentContainerStyle={s.paywallScroll} showsVerticalScrollIndicator={false}>
           {/* Logo */}
-          <LinearGradient colors={["#7B2FBE", "#E040FB"]} style={s.paywallLogoBox}>
+          <LinearGradient colors={["#8A6A1E", "#C8A045"]} style={s.paywallLogoBox}>
             <Text style={{ fontSize: 38, color: "#fff" }}>✦</Text>
           </LinearGradient>
 
@@ -1556,11 +1556,11 @@ const s = StyleSheet.create({
   placeCardSel: { borderColor: C.violet },
   placeLabel: { color: C.text, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
   placeMeta: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular" },
-  selPlaceBox: { backgroundColor: "rgba(157,78,221,0.1)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
+  selPlaceBox: { backgroundColor: "rgba(106,174,120,0.12)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(106,174,120,0.32)" },
   selPlaceTxt: { color: C.violet, fontSize: 13, fontFamily: "SpaceGrotesk_600SemiBold" },
   toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
   prefCard: { backgroundColor: C.bg2, borderWidth: 1, borderColor: C.border, borderRadius: 14, padding: 14, flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  prefCardSel: { borderColor: C.violet, backgroundColor: "rgba(157,78,221,0.08)" },
+  prefCardSel: { borderColor: C.violet, backgroundColor: "rgba(106,174,120,0.09)" },
   prefDot: { width: 18, height: 18, borderRadius: 9, borderWidth: 2, borderColor: C.border, marginTop: 2 },
   prefDotSel: { borderColor: C.violet, backgroundColor: C.violet },
   prefTitle: { color: C.text, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
@@ -1584,15 +1584,15 @@ const s = StyleSheet.create({
   progressBg: { height: 4, backgroundColor: C.bg3, marginHorizontal: 20, borderRadius: 4 },
   progressFill: { height: 4, borderRadius: 4, backgroundColor: C.violet },
   assessBody: { padding: 24, paddingTop: 24, gap: 20 },
-  adaptiveBanner: { backgroundColor: "rgba(0,201,200,0.08)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(0,201,200,0.2)", marginBottom: 4 },
+  adaptiveBanner: { backgroundColor: "rgba(139,170,141,0.1)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(139,170,141,0.22)", marginBottom: 4 },
   adaptiveBannerTxt: { color: C.teal, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
-  dimBadge: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(157,78,221,0.1)", borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(157,78,221,0.3)" },
+  dimBadge: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(106,174,120,0.12)", borderRadius: 50, paddingHorizontal: 14, paddingVertical: 8, alignSelf: "flex-start", borderWidth: 1, borderColor: "rgba(106,174,120,0.32)" },
   dimBadgeEmoji: { fontSize: 16 },
   dimBadgeLbl: { color: C.violet, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
   assessQ: { color: C.text, fontSize: 22, fontFamily: "SpaceGrotesk_600SemiBold", lineHeight: 30, letterSpacing: -0.3 },
   options: { gap: 12 },
   optCard: { backgroundColor: C.bg3, borderWidth: 1, borderColor: C.border, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 14 },
-  optCardSel: { borderColor: C.violet, backgroundColor: "rgba(157,78,221,0.1)" },
+  optCardSel: { borderColor: C.violet, backgroundColor: "rgba(106,174,120,0.12)" },
   optDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.border, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   optDotSel: { borderColor: C.violet, backgroundColor: C.violet },
   optCheck: { color: "#fff", fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold" },
@@ -1626,7 +1626,7 @@ const s = StyleSheet.create({
   modeBtnTxt: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_600SemiBold" },
   modeBtnTxtActive: { color: "#fff" },
   modeSubtitle: { color: C.muted, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", marginHorizontal: 20, marginBottom: 8 },
-  demoBanner: { marginHorizontal: 16, backgroundColor: "rgba(157,78,221,0.08)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.2)", marginBottom: 6 },
+  demoBanner: { marginHorizontal: 16, backgroundColor: "rgba(106,174,120,0.09)", borderRadius: 10, padding: 10, borderWidth: 1, borderColor: "rgba(106,174,120,0.22)", marginBottom: 6 },
   demoBannerTxt: { color: C.violet, fontSize: 11, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center" },
   matchList: { padding: 16, gap: 14 },
   matchCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: C.border, padding: 18, gap: 14 },
@@ -1636,11 +1636,11 @@ const s = StyleSheet.create({
   matchName: { color: C.text, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
   matchCity: { color: C.muted, fontSize: 13, fontFamily: "SpaceGrotesk_400Regular" },
   matchActions: { flexDirection: "row", gap: 10 },
-  scoreBadge: { alignItems: "center", backgroundColor: "rgba(157,78,221,0.12)", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 10, borderWidth: 1, borderColor: "rgba(157,78,221,0.25)" },
+  scoreBadge: { alignItems: "center", backgroundColor: "rgba(106,174,120,0.14)", borderRadius: 12, paddingHorizontal: 10, paddingVertical: 10, borderWidth: 1, borderColor: "rgba(106,174,120,0.28)" },
   scoreNum: { color: C.violet, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold" },
   scoreLbl: { color: C.muted, fontSize: 9, fontFamily: "SpaceGrotesk_400Regular", textTransform: "uppercase", letterSpacing: 0.5 },
   highlights: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  highlightPill: { backgroundColor: "rgba(0,201,200,0.08)", borderRadius: 50, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(0,201,200,0.2)" },
+  highlightPill: { backgroundColor: "rgba(139,170,141,0.1)", borderRadius: 50, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(139,170,141,0.22)" },
   highlightTxt: { color: C.teal, fontSize: 12, fontFamily: "SpaceGrotesk_400Regular" },
 
   // Match detail
@@ -1671,8 +1671,8 @@ const s = StyleSheet.create({
 
   // Reports
   reportScroll: { padding: 20, gap: 16 },
-  reportDemoCard: { backgroundColor: "rgba(255,215,0,0.06)", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "rgba(255,215,0,0.2)" },
-  reportHero: { borderRadius: 20, padding: 28, alignItems: "center", gap: 6, borderWidth: 1, borderColor: "rgba(224,64,251,0.2)" },
+  reportDemoCard: { backgroundColor: "rgba(200,160,69,0.08)", borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "rgba(200,160,69,0.22)" },
+  reportHero: { borderRadius: 20, padding: 28, alignItems: "center", gap: 6, borderWidth: 1, borderColor: "rgba(200,160,69,0.2)" },
   reportHeroScore: { color: C.text, fontSize: 54, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: -2 },
   reportHeroLabel: { color: C.muted, fontSize: 12, fontFamily: "SpaceGrotesk_600SemiBold", letterSpacing: 0.5, textTransform: "uppercase" },
   reportHeroName: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular" },
@@ -1724,7 +1724,7 @@ const s = StyleSheet.create({
   ghostBtnTxt: { color: C.text, fontSize: 15, fontFamily: "SpaceGrotesk_600SemiBold" },
 
   // Reports premium gate
-  reportPaywallCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: "rgba(157,78,221,0.3)", padding: 24, alignItems: "center", gap: 10 },
+  reportPaywallCard: { backgroundColor: C.bg3, borderRadius: 20, borderWidth: 1, borderColor: "rgba(106,174,120,0.32)", padding: 24, alignItems: "center", gap: 10 },
   reportPaywallTitle: { color: C.text, fontSize: 18, fontFamily: "SpaceGrotesk_600SemiBold", textAlign: "center", letterSpacing: -0.2 },
   reportPaywallSub: { color: C.muted, fontSize: 14, fontFamily: "SpaceGrotesk_400Regular", textAlign: "center", lineHeight: 22 },
 

@@ -6,32 +6,32 @@
   <title>SoulMatch — Match Based on Who You Actually Are</title>
   <meta name="description" content="SoulMatch uses deep psychology assessment and behaviour analysis to surface people you're genuinely compatible with — for romance or friendship." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:     #0B0E14;
-      --bg2:    #10141E;
-      --bg3:    #161B27;
-      --bg4:    #1C2233;
-      --purple: #7B2FBE;
-      --violet: #9D4EDD;
-      --pink:   #E040FB;
-      --teal:   #00C9C8;
-      --gold:   #FFD700;
-      --green:  #40FB82;
-      --text:   #F0F0F8;
-      --muted:  #8A8FA8;
-      --border: rgba(255,255,255,0.08);
-      --grad:   linear-gradient(135deg, #7B2FBE 0%, #E040FB 100%);
-      --grad2:  linear-gradient(135deg, #00C9C8 0%, #7B2FBE 100%);
+      --bg:     #0D1409;
+      --bg2:    #121C0E;
+      --bg3:    #192614;
+      --bg4:    #1F2D1A;
+      --green:  #4E8B5F;
+      --greenL: #7DB87D;
+      --gold:   #C8A045;
+      --goldL:  #DDB85E;
+      --sage:   #8BAA8D;
+      --text:   #E6DDD0;
+      --muted:  #7A8A7D;
+      --border: rgba(255,255,255,0.07);
+      --grad:   linear-gradient(135deg, #4E8B5F 0%, #7DB87D 100%);
+      --grad2:  linear-gradient(135deg, #C8A045 0%, #DDB85E 100%);
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Space Grotesk', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
@@ -41,7 +41,7 @@
     /* ── CANVAS ── */
     #stars-canvas {
       position: fixed; inset: 0;
-      pointer-events: none; z-index: 0; opacity: 0.4;
+      pointer-events: none; z-index: 0; opacity: 0.35;
     }
 
     /* ── NAV ── */
@@ -49,13 +49,13 @@
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       display: flex; align-items: center; justify-content: space-between;
       padding: 1.2rem 6%;
-      background: rgba(11,14,20,0.9);
+      background: rgba(13,20,9,0.92);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
     }
     .logo {
       font-size: 1.4rem; font-weight: 700;
-      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .nav-links { display: flex; gap: 2rem; list-style: none; }
     .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
@@ -77,9 +77,9 @@
     }
     .badge {
       display: inline-flex; align-items: center; gap: 0.5rem;
-      background: rgba(0,201,200,0.12); border: 1px solid rgba(0,201,200,0.3);
+      background: rgba(200,160,69,0.1); border: 1px solid rgba(200,160,69,0.28);
       border-radius: 50px; padding: 0.4rem 1rem;
-      font-size: 0.78rem; font-weight: 600; color: var(--teal);
+      font-size: 0.78rem; font-weight: 600; color: var(--goldL);
       letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2rem;
     }
     h1 {
@@ -95,23 +95,23 @@
     }
     .hero-sub {
       font-size: clamp(1rem, 2.5vw, 1.2rem); color: var(--muted);
-      max-width: 600px; margin-bottom: 3rem; font-weight: 400; line-height: 1.7;
+      max-width: 600px; margin-bottom: 3rem; font-weight: 400; line-height: 1.75;
     }
     .hero-cta { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 4rem; }
     .btn-primary {
       background: var(--grad); color: #fff; border: none; border-radius: 50px;
       padding: 0.9rem 2.2rem; font-family: inherit; font-size: 1rem; font-weight: 600;
       cursor: pointer; transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-      text-decoration: none; display: inline-block; box-shadow: 0 0 30px rgba(157,78,221,0.3);
+      text-decoration: none; display: inline-block; box-shadow: 0 0 28px rgba(78,139,95,0.3);
     }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 0 50px rgba(157,78,221,0.5); }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 0 44px rgba(78,139,95,0.45); }
     .btn-secondary {
       background: transparent; color: var(--text); border: 1px solid var(--border);
       border-radius: 50px; padding: 0.9rem 2.2rem; font-family: inherit;
       font-size: 1rem; font-weight: 500; cursor: pointer;
       transition: border-color 0.2s, background 0.2s; text-decoration: none; display: inline-block;
     }
-    .btn-secondary:hover { border-color: rgba(157,78,221,0.6); background: rgba(157,78,221,0.08); }
+    .btn-secondary:hover { border-color: rgba(78,139,95,0.5); background: rgba(78,139,95,0.07); }
 
     /* ── DIMENSION PILLS ── */
     .dimension-cloud {
@@ -124,14 +124,14 @@
       font-size: 0.78rem; font-weight: 500; color: var(--muted);
       transition: border-color 0.3s, color 0.3s;
     }
-    .dim-pill.active { border-color: rgba(157,78,221,0.5); color: #C77DFF; }
+    .dim-pill.active { border-color: rgba(125,184,125,0.5); color: var(--greenL); }
 
     /* ── STATS ── */
     .hero-stats { display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap; }
     .stat { text-align: center; }
     .stat-num {
       font-size: 2rem; font-weight: 700;
-      background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
 
@@ -139,17 +139,17 @@
     .marquee-wrap {
       overflow: hidden; padding: 1.4rem 0;
       border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,0.018);
+      background: rgba(255,255,255,0.015);
     }
     .marquee-track { display: flex; gap: 3rem; animation: marquee 35s linear infinite; width: max-content; }
     .marquee-item { display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; color: var(--muted); font-size: 0.85rem; font-weight: 500; }
-    .marquee-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--violet); flex-shrink: 0; }
+    .marquee-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
     @keyframes marquee { to { transform: translateX(-50%); } }
 
     /* ── SECTIONS SHARED ── */
-    .section-label { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--teal); margin-bottom: 1rem; }
+    .section-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--sage); margin-bottom: 1rem; }
     .section-title { font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem; max-width: 640px; margin-left: auto; margin-right: auto; }
-    .section-sub { color: var(--muted); max-width: 520px; margin: 0 auto 4rem; font-size: 1rem; line-height: 1.7; }
+    .section-sub { color: var(--muted); max-width: 520px; margin: 0 auto 4rem; font-size: 1rem; line-height: 1.75; }
 
     /* ── HOW IT WORKS ── */
     #how { padding: 7rem 6%; text-align: center; }
@@ -159,8 +159,8 @@
       padding: 2rem 1.8rem; text-align: left; position: relative; overflow: hidden;
       transition: border-color 0.3s, transform 0.3s;
     }
-    .step-card:hover { border-color: rgba(157,78,221,0.45); transform: translateY(-4px); }
-    .step-num { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--teal); margin-bottom: 1rem; }
+    .step-card:hover { border-color: rgba(78,139,95,0.4); transform: translateY(-4px); }
+    .step-num { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; color: var(--sage); margin-bottom: 1rem; }
     .step-icon { font-size: 2.2rem; margin-bottom: 1rem; display: block; }
     .step-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; }
     .step-card p { color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
@@ -168,20 +168,20 @@
     /* ── PSYCHOLOGY BREAKDOWN ── */
     #psychology {
       padding: 7rem 6%;
-      background: linear-gradient(180deg, transparent, rgba(0,201,200,0.03), transparent);
+      background: linear-gradient(180deg, transparent, rgba(78,139,95,0.04), transparent);
     }
     .psych-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; max-width: 1060px; margin: 0 auto; align-items: center; }
     .psych-dims { display: flex; flex-direction: column; gap: 1rem; }
     .dim-row { display: flex; align-items: center; gap: 1rem; }
     .dim-label { width: 200px; font-size: 0.85rem; font-weight: 500; color: var(--muted); flex-shrink: 0; }
-    .dim-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
-    .dim-bar { height: 100%; border-radius: 6px; background: var(--grad2); }
+    .dim-bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 6px; overflow: hidden; }
+    .dim-bar { height: 100%; border-radius: 6px; background: var(--grad); }
     .psych-copy h2 { font-size: clamp(1.6rem, 3.5vw, 2.6rem); font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1.2rem; line-height: 1.2; }
-    .psych-copy p { color: var(--muted); font-size: 0.95rem; line-height: 1.75; margin-bottom: 1.5rem; }
+    .psych-copy p { color: var(--muted); font-size: 0.95rem; line-height: 1.8; margin-bottom: 1.5rem; }
     .astro-note {
       display: inline-flex; align-items: center; gap: 0.5rem;
-      background: rgba(123,47,190,0.1); border: 1px solid rgba(123,47,190,0.2);
-      border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.82rem; color: #C77DFF;
+      background: rgba(200,160,69,0.08); border: 1px solid rgba(200,160,69,0.22);
+      border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.82rem; color: var(--goldL);
     }
 
     /* ── FEATURES ── */
@@ -191,14 +191,14 @@
       background: var(--bg3); border: 1px solid var(--border); border-radius: 20px;
       padding: 2rem; transition: border-color 0.3s, transform 0.3s;
     }
-    .feature-card:hover { border-color: rgba(0,201,200,0.3); transform: translateY(-3px); }
+    .feature-card:hover { border-color: rgba(78,139,95,0.35); transform: translateY(-3px); }
     .feature-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 1.2rem; }
-    .i-teal   { background: rgba(0,201,200,0.15); }
-    .i-purple { background: rgba(123,47,190,0.2); }
-    .i-pink   { background: rgba(224,64,251,0.12); }
-    .i-gold   { background: rgba(255,215,0,0.1); }
-    .i-green  { background: rgba(64,251,130,0.1); }
-    .i-blue   { background: rgba(64,153,251,0.12); }
+    .i-teal   { background: rgba(139,170,141,0.14); }
+    .i-purple { background: rgba(78,139,95,0.15); }
+    .i-pink   { background: rgba(200,160,69,0.1); }
+    .i-gold   { background: rgba(200,160,69,0.12); }
+    .i-green  { background: rgba(78,139,95,0.12); }
+    .i-blue   { background: rgba(125,184,125,0.1); }
     .feature-card h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem; }
     .feature-card p  { color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
 
@@ -206,20 +206,21 @@
     #vs { padding: 7rem 6%; text-align: center; }
     .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 800px; margin: 0 auto; }
     .vs-card { border-radius: 20px; padding: 2rem; text-align: left; }
-    .vs-bad { background: rgba(255,80,80,0.05); border: 1px solid rgba(255,80,80,0.15); }
-    .vs-good { background: rgba(64,251,130,0.04); border: 1px solid rgba(64,251,130,0.2); }
+    .vs-bad  { background: rgba(200,80,80,0.04); border: 1px solid rgba(200,80,80,0.14); }
+    .vs-good { background: rgba(78,139,95,0.06); border: 1px solid rgba(78,139,95,0.22); }
     .vs-title { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.2rem; }
-    .vs-bad .vs-title { color: #FF8080; }
-    .vs-good .vs-title { color: var(--green); }
+    .vs-bad .vs-title  { color: #D08080; }
+    .vs-good .vs-title { color: var(--greenL); }
     .vs-item { display: flex; align-items: flex-start; gap: 0.7rem; margin-bottom: 0.75rem; font-size: 0.88rem; color: var(--muted); }
     .vs-icon { flex-shrink: 0; margin-top: 1px; }
 
     /* ── TESTIMONIALS ── */
     #testimonials { padding: 7rem 6%; text-align: center; }
     .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
-    .testi-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 1.8rem; text-align: left; }
+    .testi-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; padding: 1.8rem; text-align: left; transition: border-color 0.3s; }
+    .testi-card:hover { border-color: rgba(78,139,95,0.3); }
     .stars { color: var(--gold); font-size: 0.85rem; margin-bottom: 1rem; letter-spacing: 2px; }
-    .testi-quote { font-size: 0.95rem; color: var(--text); line-height: 1.75; margin-bottom: 1.5rem; }
+    .testi-quote { font-size: 0.95rem; color: var(--text); line-height: 1.8; margin-bottom: 1.5rem; }
     .testi-author { display: flex; align-items: center; gap: 0.8rem; }
     .avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .testi-name { font-size: 0.85rem; font-weight: 600; }
@@ -229,49 +230,49 @@
     #beta { padding: 7rem 6%; }
     .beta-box {
       max-width: 680px; margin: 0 auto; background: var(--bg3);
-      border: 1px solid rgba(157,78,221,0.25); border-radius: 28px; padding: 3.5rem;
+      border: 1px solid rgba(78,139,95,0.28); border-radius: 28px; padding: 3.5rem;
       text-align: center; position: relative; overflow: hidden;
     }
     .beta-box::before {
       content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
       width: 400px; height: 400px;
-      background: radial-gradient(circle, rgba(157,78,221,0.12) 0%, transparent 70%);
+      background: radial-gradient(circle, rgba(78,139,95,0.1) 0%, transparent 70%);
       pointer-events: none;
     }
     .beta-box h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; margin-bottom: 0.8rem; }
-    .beta-box p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.7; }
+    .beta-box p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.75; }
     .form-row { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
     .form-input {
-      flex: 1; min-width: 220px; background: rgba(255,255,255,0.05);
+      flex: 1; min-width: 220px; background: rgba(255,255,255,0.04);
       border: 1px solid var(--border); border-radius: 50px; padding: 0.85rem 1.5rem;
       font-family: inherit; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s;
     }
     .form-input::placeholder { color: var(--muted); }
-    .form-input:focus { border-color: rgba(157,78,221,0.6); }
+    .form-input:focus { border-color: rgba(78,139,95,0.55); }
     .success-msg {
       display: none; margin-top: 1.5rem; padding: 1rem;
-      background: rgba(64,251,130,0.08); border: 1px solid rgba(64,251,130,0.25);
-      border-radius: 12px; color: var(--green); font-size: 0.9rem;
+      background: rgba(78,139,95,0.1); border: 1px solid rgba(78,139,95,0.28);
+      border-radius: 12px; color: var(--greenL); font-size: 0.9rem;
     }
     .beta-perks { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; margin-top: 1.8rem; }
     .perk { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); }
-    .perk-dot { color: var(--green); }
+    .perk-dot { color: var(--greenL); }
 
     /* ── FOOTER ── */
     footer {
       padding: 3rem 6%; border-top: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
     }
-    .footer-logo { font-size: 1.1rem; font-weight: 700; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .footer-logo { font-size: 1.1rem; font-weight: 700; background: var(--grad2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .footer-copy { color: var(--muted); font-size: 0.8rem; }
     .footer-links { display: flex; gap: 1.5rem; }
     .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.8rem; transition: color 0.2s; }
     .footer-links a:hover { color: var(--text); }
 
     /* ── ORB GLOWS ── */
-    .orb { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; z-index: 0; }
-    .orb-1 { width: 500px; height: 500px; background: rgba(0,201,200,0.08); top: 5%; left: -15%; }
-    .orb-2 { width: 350px; height: 350px; background: rgba(123,47,190,0.15); top: 25%; right: -8%; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+    .orb-1 { width: 520px; height: 520px; background: rgba(78,139,95,0.07); top: 5%; left: -15%; }
+    .orb-2 { width: 360px; height: 360px; background: rgba(200,160,69,0.06); top: 25%; right: -8%; }
 
     @media (max-width: 768px) {
       .psych-grid { grid-template-columns: 1fr; }
@@ -461,11 +462,11 @@
     </div>
     <div class="vs-card vs-good">
       <div class="vs-title">✓ SoulMatch</div>
-      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Matching based on 12 psychological dimensions</div>
-      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Optimised for genuine long-term fit</div>
-      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Every match includes a compatibility breakdown</div>
-      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> Separate scoring for romance vs. friendship</div>
-      <div class="vs-item"><span class="vs-icon" style="color:var(--green)">✓</span> You leave with real insight into yourself</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--greenL)">✓</span> Matching based on 12 psychological dimensions</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--greenL)">✓</span> Optimised for genuine long-term fit</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--greenL)">✓</span> Every match includes a compatibility breakdown</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--greenL)">✓</span> Separate scoring for romance vs. friendship</div>
+      <div class="vs-item"><span class="vs-icon" style="color:var(--greenL)">✓</span> You leave with real insight into yourself</div>
     </div>
   </div>
 </section>
@@ -523,7 +524,7 @@
       <div class="stars">★★★★★</div>
       <p class="testi-quote">"The assessment took 4 minutes and was more accurate than anything I've read about myself in years. The compatibility breakdown told me exactly why we clicked — and it was right."</p>
       <div class="testi-author">
-        <div class="avatar" style="background:rgba(0,201,200,0.15)">🧠</div>
+        <div class="avatar" style="background:rgba(78,139,95,0.15)">🧠</div>
         <div>
           <div class="testi-name">Maya R.</div>
           <div class="testi-detail">Anxious-secure attachment · Toronto</div>
@@ -534,7 +535,7 @@
       <div class="stars">★★★★★</div>
       <p class="testi-quote">"I've tried every dating app. This is the first one where I actually understood why I matched with someone before we spoke. That changes the whole dynamic of the first conversation."</p>
       <div class="testi-author">
-        <div class="avatar" style="background:rgba(123,47,190,0.15)">💬</div>
+        <div class="avatar" style="background:rgba(200,160,69,0.15)">💬</div>
         <div>
           <div class="testi-name">Jordan K.</div>
           <div class="testi-detail">Secure attachment · Vancouver</div>
@@ -545,7 +546,7 @@
       <div class="stars">★★★★★</div>
       <p class="testi-quote">"I used it in friendship mode and found two people I genuinely clicked with immediately. The shared values dimension was the most accurate — we basically had the same worldview."</p>
       <div class="testi-author">
-        <div class="avatar" style="background:rgba(64,251,130,0.12)">✨</div>
+        <div class="avatar" style="background:rgba(139,170,141,0.15)">✨</div>
         <div>
           <div class="testi-name">Sofia T.</div>
           <div class="testi-detail">Dismissive-avoidant · Toronto</div>
@@ -608,7 +609,7 @@
     stars.forEach(s => {
       const pulse = s.o * (0.55 + 0.45 * Math.sin(t * s.speed + s.phase));
       ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,255,255,${pulse})`; ctx.fill();
+      ctx.fillStyle = `rgba(220,190,120,${pulse})`; ctx.fill();
     });
     requestAnimationFrame(drawStars);
   }
