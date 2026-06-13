@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from datetime import datetime
@@ -11,6 +12,8 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import AuthUser, BillingProduct, PaymentEvent, Subscription
 from ..security import get_current_auth_user, require_admin_user
+from ..services.analytics import track as ph_track
+from ..services.email import send_subscription_confirmed
 from ..settings import get_settings
 
 logger = logging.getLogger("soulmatch.billing")
@@ -225,7 +228,16 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     logger.info("stripe_webhook_received", extra={"event_type": event_type, "event_id": event["id"]})
 
     if event_type == "checkout.session.completed":
-        _handle_checkout_completed(event["data"]["object"], db)
+        session_obj = event["data"]["object"]
+        _handle_checkout_completed(session_obj, db)
+        provisioned_user_id = session_obj.get("metadata", {}).get("user_id") or session_obj.get("client_reference_id")
+        if provisioned_user_id:
+            settings = get_settings()
+            product_code = session_obj.get("metadata", {}).get("product_code", "premium_monthly")
+            ph_track("subscription_started", distinct_id=provisioned_user_id, properties={"product_code": product_code}, api_key=settings.posthog_api_key)
+            auth_user = db.get(AuthUser, provisioned_user_id)
+            if auth_user and settings.resend_api_key:
+                asyncio.create_task(send_subscription_confirmed(to=auth_user.email, resend_api_key=settings.resend_api_key))
 
     elif event_type in ("customer.subscription.updated", "customer.subscription.deleted"):
         _handle_subscription_updated(event["data"]["object"], db)
