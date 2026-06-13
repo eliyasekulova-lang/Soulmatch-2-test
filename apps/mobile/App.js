@@ -1257,7 +1257,7 @@ function ReportsScreen({ user, profile, assessed, onBack, onAssess, isPremium, o
 }
 
 // ── 10. SETTINGS ───────────────────────────────────────────────────────────────
-function SettingsScreen({ user, onBack, onSignOut, isPremium, onUpgrade, onManageSub }) {
+function SettingsScreen({ user, onBack, onSignOut, onDeleteAccount, isPremium, onUpgrade, onManageSub }) {
   const [notifs, setNotifs] = useState(true);
   const SettingsRow = ({ label, value, onPress, danger }) => (
     <TouchableOpacity style={s.settRow} onPress={onPress}>
@@ -1326,7 +1326,7 @@ function SettingsScreen({ user, onBack, onSignOut, isPremium, onUpgrade, onManag
             <View style={s.divider} />
             <SettingsRow label="Terms of Service" />
             <View style={s.divider} />
-            <SettingsRow label="Delete my data" />
+            <SettingsRow label="Delete my data" danger onPress={onDeleteAccount} />
           </View>
           <View style={s.card}>
             <SettingsRow label="Sign out" danger onPress={onSignOut} />
@@ -1607,6 +1607,26 @@ export default function App() {
     nav("login");
   }
 
+  function deleteAccount() {
+    Alert.alert(
+      "Delete your account?",
+      "All your data will be permanently removed. This cannot be undone.",
+      [
+        {
+          text: "Delete permanently",
+          style: "destructive",
+          onPress: () => {
+            if (authToken) {
+              apiRequest("POST", "/compliance/user/delete", { reason: "user_requested" }, authToken).catch(() => {});
+            }
+            signOut();
+          },
+        },
+        { text: "Cancel", style: "cancel" },
+      ]
+    );
+  }
+
   if (screen === "splash")      return <SplashScreen onDone={() => nav("login")} />;
   if (screen === "login")       return <LoginScreen onLogin={login} onGoRegister={() => { setAuthErr(""); nav("register"); }} error={authError} busy={busy} />;
   if (screen === "register")    return <RegisterScreen onComplete={register} onGoLogin={() => { setAuthErr(""); nav("login"); }} error={authError} busy={busy} />;
@@ -1616,7 +1636,7 @@ export default function App() {
   if (screen === "match_detail") return <MatchDetailScreen match={navParam?.match} userProfile={profile} mode={navParam?.mode || mode} onBack={() => nav("discovery")} onChat={m => nav("chat", m)} onBlock={blockUser} onReport={reportUser} />;
   if (screen === "chat")        return <ChatScreen match={navParam} messages={messages[navParam?.id]} onSend={sendMessage} onBack={() => nav("match_detail", { match: navParam, mode })} onBlock={blockUser} onReport={reportUser} />;
   if (screen === "reports")     return <ReportsScreen user={user} profile={profile} assessed={assessed} onBack={() => nav("profile")} onAssess={() => nav("assessment")} isPremium={isPremium} onUpgrade={() => goPaywall("reports")} />;
-  if (screen === "settings")    return <SettingsScreen user={user} onBack={() => nav("profile")} onSignOut={signOut} isPremium={isPremium} onUpgrade={() => goPaywall("general")} onManageSub={openPortal} />;
+  if (screen === "settings")    return <SettingsScreen user={user} onBack={() => nav("profile")} onSignOut={signOut} onDeleteAccount={deleteAccount} isPremium={isPremium} onUpgrade={() => goPaywall("general")} onManageSub={openPortal} />;
   if (screen === "paywall")     return <PaywallScreen context={navParam?.context || "general"} onBack={() => nav(navParam?.from || "profile")} onCheckout={openCheckout} busy={checkoutBusy} error={checkoutError} />;
   return null;
 }

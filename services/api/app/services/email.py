@@ -13,14 +13,6 @@ class EmailTemplate(str, Enum):
 
 
 def _beta_welcome_html(position: int) -> str:
-    ordinal_suffix = (
-        "st" if position % 10 == 1 and position % 100 != 11
-        else "th" if position % 10 in (1, 2, 3) is False or position % 100 in range(11, 14)
-        else "nd" if position % 10 == 2
-        else "rd" if position % 10 == 3
-        else "th"
-    )
-    # simpler ordinal
     if 11 <= (position % 100) <= 13:
         suffix = "th"
     elif position % 10 == 1:
