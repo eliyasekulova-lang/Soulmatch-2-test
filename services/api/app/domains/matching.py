@@ -19,8 +19,10 @@ from ..models import (
     UserProfileState,
 )
 from ..security import get_current_auth_user
+from ..services.analytics import track as ph_track
 from ..services.match_orchestration_service import compute_orchestrated_matches, replace_match_result_rows
 from ..services.matching import explanation_reasons, explanation_watch_items
+from ..settings import get_settings
 
 router = APIRouter(tags=["matching"])
 logger = logging.getLogger("soulmatch.api")
@@ -316,6 +318,7 @@ def match(
         "matches_generated",
         {"mode": payload.mode, "match_mode": payload.match_mode, "count": len(results)},
     )
+    ph_track("matches_generated", distinct_id=payload.user_id, properties={"mode": payload.mode, "match_mode": payload.match_mode, "count": len(results), "low_supply": len(results) < 3}, api_key=get_settings().posthog_api_key)
     low_supply, message = _low_supply_status(len(results))
     return {
         "ok": True,
