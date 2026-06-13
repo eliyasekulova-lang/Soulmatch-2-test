@@ -9,7 +9,7 @@ services:
     startCommand: bash scripts/start.sh
     plan: starter          # upgrade to standard when you need more RAM
     region: oregon         # change to match your users (e.g. frankfurt)
-    healthCheckPath: /health/live
+    healthCheckPath: /health
     envVars:
       - key: APP_ENV
         value: production
@@ -61,6 +61,8 @@ services:
         sync: false          # paste re_... from Resend dashboard (resend.com)
       - key: ANTHROPIC_API_KEY
         sync: false          # paste sk-ant-... from console.anthropic.com (never commit)
+      - key: POSTHOG_API_KEY
+        sync: false          # paste phc_... from app.posthog.com (never commit)
 
   # ── Landing page (static site) ────────────────────────────────────────────
   - type: web

@@ -25,7 +25,9 @@
       },
       "env": {
         "EXPO_PUBLIC_ENV": "staging",
-        "EXPO_PUBLIC_API_BASE_URL": "https://soulmatch-api.onrender.com"
+        "EXPO_PUBLIC_API_BASE_URL": "https://soulmatch-api.onrender.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "REPLACE_WITH_POSTHOG_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "REPLACE_WITH_SENTRY_DSN"
       }
     },
     "production": {
@@ -38,7 +40,9 @@
       },
       "env": {
         "EXPO_PUBLIC_ENV": "production",
-        "EXPO_PUBLIC_API_BASE_URL": "https://soulmatch-api.onrender.com"
+        "EXPO_PUBLIC_API_BASE_URL": "https://soulmatch-api.onrender.com",
+        "EXPO_PUBLIC_POSTHOG_API_KEY": "REPLACE_WITH_POSTHOG_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "REPLACE_WITH_SENTRY_DSN"
       }
     }
   },

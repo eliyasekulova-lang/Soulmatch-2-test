@@ -1,9 +1,8 @@
 import asyncio
 import logging
-import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -11,14 +10,13 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import BetaSignup, WebAssessment
 from ..security import require_admin_user
+from ..services.analytics import track as ph_track
 from ..services.email import send_beta_welcome
 from ..settings import get_settings
 
 logger = logging.getLogger("soulmatch.beta")
 
 router = APIRouter(prefix="/beta", tags=["beta"])
-
-_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 class BetaSignupRequest(BaseModel):
@@ -98,6 +96,7 @@ def beta_signup(body: BetaSignupRequest, background_tasks: BackgroundTasks, db: 
     logger.info("beta_signup", extra={"email_domain": body.email.split("@")[-1], "source": body.source})
 
     settings = get_settings()
+    ph_track("beta_signup", distinct_id=body.email, properties={"position": position, "source": body.source}, api_key=settings.posthog_api_key)
     background_tasks.add_task(_send_beta_welcome_sync, body.email, position, settings.resend_api_key)
 
     return BetaSignupResponse(

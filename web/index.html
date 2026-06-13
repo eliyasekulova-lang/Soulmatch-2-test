@@ -569,6 +569,9 @@
         <button type="submit" class="btn-primary">Join the beta →</button>
       </div>
     </form>
+    <p id="signup-error" style="display:none;margin-top:0.75rem;font-size:0.85rem;color:#e07070;">
+      Something went wrong. Email us directly at <a href="mailto:hello@soulmatch.app" style="color:#4E8B5F;">hello@soulmatch.app</a> and we'll add you manually.
+    </p>
     <div class="success-msg" id="success-msg">
       🌟 You're on the list! We'll reach out when your spot opens up.
     </div>
@@ -637,24 +640,26 @@
     e.preventDefault();
     const email = document.getElementById('email-input').value.trim();
     const btn = e.target.querySelector('button');
+    const errEl = document.getElementById('signup-error');
     btn.textContent = 'Joining...'; btn.disabled = true;
+    errEl.style.display = 'none';
     posthog.capture('beta_signup_attempt', { source: 'landing_page' });
     try {
       const res = await fetch(`${API_BASE}/beta/signup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source: 'landing_page' }),
       });
+      if (!res.ok) throw new Error('server_error');
       const data = await res.json();
       posthog.capture('beta_signup_success', { position: data.position });
       posthog.identify(email);
+      document.getElementById('signup-form').style.display = 'none';
+      document.getElementById('success-msg').style.display = 'block';
     } catch (_) {
-      const list = JSON.parse(localStorage.getItem('sm_beta') || '[]');
-      if (!list.find(r => r.email === email)) list.push({ email, ts: new Date().toISOString() });
-      localStorage.setItem('sm_beta', JSON.stringify(list));
       posthog.capture('beta_signup_fallback');
+      btn.textContent = 'Join the beta →'; btn.disabled = false;
+      errEl.style.display = 'block';
     }
-    document.getElementById('signup-form').style.display = 'none';
-    document.getElementById('success-msg').style.display = 'block';
   }
 
   /* ── SCROLL ANIMATIONS ── */

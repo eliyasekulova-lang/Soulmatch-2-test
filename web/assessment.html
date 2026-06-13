@@ -736,10 +736,9 @@ async function saveProfile() {
       throw new Error('err');
     }
   } catch {
-    // Graceful fallback — still acknowledge the user
-    msg.className   = 'save-msg ok';
-    msg.textContent = "✓ You're on the list! We'll be in touch when SoulMatch opens.";
-    btn.textContent = 'Saved ✓';
+    msg.className   = 'save-msg err';
+    msg.textContent = "Couldn't save right now. Email hello@soulmatch.app and we'll add you manually.";
+    btn.textContent = 'Save my results'; btn.disabled = false;
   }
 }
 

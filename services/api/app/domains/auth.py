@@ -21,6 +21,7 @@ from ..security import (
     verify_password,
 )
 from ..rate_limit import limit_auth_identity_requests, limit_auth_requests, limit_refresh_requests
+from ..services.analytics import track as ph_track
 from ..settings import get_settings
 
 router = APIRouter(tags=["auth"])
@@ -158,6 +159,7 @@ def auth_signup(
     db.add(auth_user)
     db.commit()
     _track_event_best_effort(db, user_id, "auth_signup", {"email": payload.email, "role": role})
+    ph_track("sign_up", distinct_id=user_id, properties={"email_domain": payload.email.split("@")[-1], "role": role}, api_key=settings.posthog_api_key)
     return {"ok": True, **_issue_tokens(db, auth_user)}
 
 

@@ -25,6 +25,10 @@ import {
 } from "@expo-google-fonts/space-grotesk";
 import tzLookup from "tz-lookup";
 import { API_BASE_URL } from "./src/config";
+import { identify as phIdentify, track, reset as phReset } from "./src/analytics";
+import { initSentry, captureException, setUser as setSentryUser } from "./src/sentry";
+
+initSentry();
 
 const { width: W } = Dimensions.get("window");
 
@@ -1500,7 +1504,11 @@ export default function App() {
       const res = await apiRequest("POST", "/auth/login", { email, password }, null);
       if (!res.ok) { setAuthErr(normalizeError(res.body, "Login failed")); return; }
       setToken(res.body.access_token);
-      setUser({ id: res.body.user_id, name: res.body.name || email.split("@")[0], email });
+      const u = { id: res.body.user_id, name: res.body.name || email.split("@")[0], email };
+      setUser(u);
+      phIdentify(u.id, { email });
+      setSentryUser(u.id);
+      track("login");
       checkSubscription(res.body.access_token);
       nav("profile");
     } catch (e) { setAuthErr(normalizeError(e, "Network error")); }
@@ -1531,7 +1539,11 @@ export default function App() {
       if (pref === "psych_behavior_astro") {
         apiRequest("POST", "/vectors/generate", { user_id: auth.user_id }, auth.access_token).catch(() => {});
       }
-      setUser({ id: auth.user_id, name, email });
+      const u = { id: auth.user_id, name, email };
+      setUser(u);
+      phIdentify(u.id, { email, matching_preference: pref });
+      setSentryUser(u.id);
+      track("sign_up", { matching_preference: pref });
       nav("assessment");
     } catch (e) { setAuthErr(normalizeError(e, "Registration failed")); }
     finally { setBusy(false); }
@@ -1541,6 +1553,7 @@ export default function App() {
     const computed = computeProfile(answers, adaptiveAns, intensities, adaptiveIntensity);
     setProfile(computed);
     setAssessed(true);
+    track("assessment_completed", { attachment_type: computed.attachmentType });
     if (authToken && user?.id) {
       apiRequest("POST", "/psychology/mobile-submit", {
         attachment_type: computed.attachmentType,
@@ -1603,6 +1616,9 @@ export default function App() {
   }
 
   function signOut() {
+    track("sign_out");
+    phReset();
+    setSentryUser(null);
     setUser(null); setToken(""); setMatches([]); setProfile(null); setAssessed(false);
     nav("login");
   }

@@ -35,6 +35,7 @@ class Settings:
     stripe_premium_price_id: str
     resend_api_key: str
     anthropic_api_key: str
+    posthog_api_key: str
 
 
 def get_settings() -> Settings:
@@ -126,4 +127,5 @@ def get_settings() -> Settings:
         stripe_premium_price_id=os.getenv("STRIPE_PREMIUM_PRICE_ID", "").strip(),
         resend_api_key=os.getenv("RESEND_API_KEY", "").strip(),
         anthropic_api_key=os.getenv("ANTHROPIC_API_KEY", "").strip(),
+        posthog_api_key=os.getenv("POSTHOG_API_KEY", "").strip(),
     )

@@ -1,7 +1,7 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import SessionLocal, init_db
@@ -22,7 +22,7 @@ from .domains.psychology import router as psychology_router
 from .domains.deep_assessment import router as deep_assessment_router
 from .jobs.seed_psycho_items import seed_psycho_items
 from .observability import configure_logging, init_sentry, install_audit_event_middleware, install_request_logging
-from .runtime_state import mark_startup_error, mark_startup_ok
+from .runtime_state import mark_startup_error, mark_startup_ok, startup_snapshot
 from .seed import seed_demo_candidates
 from .settings import get_settings
 
@@ -77,6 +77,20 @@ app.add_middleware(
 )
 install_request_logging(app)
 install_audit_event_middleware(app)
+
+
+@app.get("/health", include_in_schema=False)
+def health(response: Response):
+    snap = startup_snapshot()
+    if not snap["startup_ok"]:
+        response.status_code = 503
+        return {"status": "error", **snap}
+    return {"status": "ok", **snap}
+
+
+@app.get("/v1/health", include_in_schema=False)
+def health_v1(response: Response):
+    return health(response)
 
 
 routers = [
