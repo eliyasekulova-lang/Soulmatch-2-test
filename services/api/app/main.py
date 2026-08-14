@@ -31,9 +31,26 @@ configure_logging(settings.log_level)
 init_sentry(settings.sentry_dsn, settings.sentry_environment)
 
 
+def _ensure_migrations() -> None:
+    """Run alembic upgrade head; if version tracking is out of sync, recover via create_all + stamp."""
+    import subprocess
+    from sqlalchemy import create_engine
+    from .models import Base
+
+    result = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True)
+    if result.returncode == 0:
+        return
+    if "locate revision" not in result.stderr and "locate revision" not in result.stdout:
+        raise RuntimeError(f"Migration failed: {result.stderr or result.stdout}")
+    engine = create_engine(settings.database_url)
+    Base.metadata.create_all(engine, checkfirst=True)
+    subprocess.run(["alembic", "stamp", "head"], check=True)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     try:
+        _ensure_migrations()
         init_db()
         if os.getenv("SEED_DEMO_CANDIDATES", "false").lower() == "true":
             with SessionLocal() as db:
