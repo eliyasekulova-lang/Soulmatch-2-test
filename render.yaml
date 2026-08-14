@@ -5,7 +5,7 @@ services:
     runtime: python
     rootDir: services/api
     buildCommand: pip install -r requirements.txt
-    preDeployCommand: alembic upgrade head
+    preDeployCommand: python scripts/pre_deploy.py
     startCommand: bash scripts/start.sh
     plan: starter          # upgrade to standard when you need more RAM
     region: oregon         # change to match your users (e.g. frankfurt)
