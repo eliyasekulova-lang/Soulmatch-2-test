@@ -24,7 +24,7 @@ services:
       - key: ADMIN_EMAILS
         sync: false          # set manually in Render dashboard
       - key: CORS_ALLOW_ORIGINS
-        value: https://soulmatch.app,https://www.soulmatch.app,https://app.soulmatch.app,https://eliyasekulova-lang.github.io
+        value: https://soulmatch.app,https://www.soulmatch.app,https://app.soulmatch.app,https://eliyasekulova-lang.github.io,https://soulmatching-staging.onrender.com
       - key: APP_SUPPORT_EMAIL
         value: support@soulmatch.app
       - key: APP_POLICY_BASE_URL

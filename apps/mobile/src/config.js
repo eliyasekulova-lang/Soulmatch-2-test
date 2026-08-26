@@ -2,7 +2,7 @@ const ENV = process.env.EXPO_PUBLIC_ENV || "development";
 
 const defaults = {
   development: "http://127.0.0.1:8000",
-  staging: "https://staging-api.soulmatch.app",
+  staging: "https://soulmatching-staging.onrender.com",
   production: "https://api.soulmatch.app",
 };
 
